@@ -17,6 +17,8 @@ export default defineConfig({
         "favicon.svg",
         "robots.txt",
         "apple-touch-icon.png",
+        "assets/no_cover_thumb.gif",
+        "src/assets/no_cover_thumb.gif",
       ],
       manifest: {
         name: "BookNest",

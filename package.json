@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@undecaf/barcode-detector-polyfill": "^0.9.21",
+    "idb": "^8.0.2",
     "lucide-react": "^0.503.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
