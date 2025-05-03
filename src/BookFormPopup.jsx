@@ -69,7 +69,7 @@ export default function BookFormPopup({ book, mode, onSave, onDelete, onClose })
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.addEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (

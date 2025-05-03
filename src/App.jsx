@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ISBNScanner from './ISBNScanner';
 import BookFormPopup from './BookFormPopup';
+import BookSearch from './BookSearch';
 import { openDB } from 'idb';
 import noCoverThumb from './assets/no_cover_thumb.gif';
 import './App.css';
@@ -79,6 +80,8 @@ const getUniqueCategories = (books) => {
 const App = ({ updateSW }) => {
   const [screen, setScreen] = useState('home');
   const [showScanner, setShowScanner] = useState(false);
+  const [showMultiScanner, setShowMultiScanner] = useState(false);
+  const [showScanOptions, setShowScanOptions] = useState(false);
   const [myBooks, setMyBooks] = useState([]);
   const [lastScannedISBN, setLastScannedISBN] = useState(null);
   const [scannedBook, setScannedBook] = useState(null);
@@ -87,6 +90,9 @@ const App = ({ updateSW }) => {
   const [sortBy, setSortBy] = useState('date_added');
   const [sortOrder, setSortOrder] = useState('desc');
   const [authorFilter, setAuthorFilter] = useState('');
+  const [showGlow, setShowGlow] = useState(false); // State for glow animation
+  const [bannerMessage, setBannerMessage] = useState(null); // State for banner
+  const [bannerType, setBannerType] = useState('success'); // 'success' or 'error'
 
   // Load books from IndexedDB on mount
   useEffect(() => {
@@ -97,9 +103,8 @@ const App = ({ updateSW }) => {
     loadBooks();
   }, []);
 
-  // Handle ISBN scan
+  // Handle ISBN scan (single scan)
   const handleScan = async (isbn) => {
-    // Check for duplicate ISBN when adding
     if (await bookExistsInIndexedDB(isbn)) {
       setError('This book is already in your list.');
       setScannedBook(null);
@@ -121,11 +126,11 @@ const App = ({ updateSW }) => {
           isbn13: isbn,
           published_year: publishedYear,
           reading_status: 2, // Default to "Read"
-          cover_url: book.volumeInfo.imageLinks?.thumbnail, // Undefined if no thumbnail
-          date_added: new Date().toISOString().split('T')[0], // e.g., '2025-04-30'
-          description: book.searchInfo?.textSnippet || 'No description available.',
+          cover_url: book.volumeInfo.imageLinks?.thumbnail || `https://buch.isbn.de/cover/${isbn}.webp`,
+          date_added: new Date().toISOString().split('T')[0],
+          description: (book.volumeInfo.description || book.searchInfo?.textSnippet || 'No description available.').slice(0, 150),
           categories,
-          uniqueCategories: getUniqueCategories(myBooks), // Pass unique categories
+          uniqueCategories: getUniqueCategories(myBooks),
         });
         setLastScannedISBN(isbn);
         setError(null);
@@ -139,8 +144,9 @@ const App = ({ updateSW }) => {
   // Handle add or edit book
   const handleAddBook = async (book) => {
     if (book) {
-      // Exclude uniqueCategories from the stored book
       const { uniqueCategories, ...bookToSave } = book;
+      // Ensure description is limited to 150 characters when saving
+      bookToSave.description = bookToSave.description.slice(0, 150);
       await addBookToIndexedDB(bookToSave);
       const updatedBooks = await getBooksFromIndexedDB();
       setMyBooks(updatedBooks);
@@ -181,11 +187,11 @@ const App = ({ updateSW }) => {
 
   // Clear last scanned ISBN after 5 seconds or when scanner/popup is active
   useEffect(() => {
-    if (lastScannedISBN && !showScanner && !scannedBook && !editingBook) {
+    if (lastScannedISBN && !showScanner && !showMultiScanner && !scannedBook && !editingBook) {
       const timer = setTimeout(() => setLastScannedISBN(null), 5000);
       return () => clearTimeout(timer);
     }
-  }, [lastScannedISBN, showScanner, scannedBook, editingBook]);
+  }, [lastScannedISBN, showScanner, showMultiScanner, scannedBook, editingBook]);
 
   // Sort and filter books
   const getSortedAndFilteredBooks = () => {
@@ -210,30 +216,53 @@ const App = ({ updateSW }) => {
   };
 
   // Home Screen
-  const HomeScreen = ({ setShowScanner, lastScannedISBN }) => (
+  const HomeScreen = ({ setShowScanOptions, lastScannedISBN }) => (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">BookNest</h1>
-      <input
-        type="text"
-        placeholder="Search books..."
-        className="w-full p-2 border rounded mb-4"
+      <BookSearch
+        myBooks={myBooks}
+        setScannedBook={setScannedBook}
+        setError={setError}
+        bookExistsInIndexedDB={bookExistsInIndexedDB}
       />
       <button
-        onClick={() => setShowScanner(true)}
-        className="w-full bg-blue-500 text-white p-2 rounded mb-4"
+        onClick={() => setShowScanOptions(prev => !prev)}
+        className="w-full bg-blue-500 text-white p-2 rounded mb-2"
       >
         Scan ISBN
       </button>
+      {showScanOptions && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => {
+              setShowScanner(true);
+              setShowScanOptions(false);
+            }}
+            className="flex-1 bg-blue-500 text-white p-2 rounded"
+          >
+            Single Scan
+          </button>
+          <button
+            onClick={() => {
+              setShowMultiScanner(true);
+              setShowScanOptions(false);
+            }}
+            className="flex-1 bg-blue-600 text-white p-2 rounded"
+          >
+            Multi Scan
+          </button>
+        </div>
+      )}
       {lastScannedISBN && (
         <p className="text-sm text-green-600 mb-4">Scanned ISBN: {lastScannedISBN}</p>
       )}
-      <h2 className="text-lg mb-2">Recommendations</h2>
+      <h2 className="text-lg font-semibold mb-2">Recommendations</h2>
       {initialBooks.map(book => (
         <div key={book.id} className="flex mb-2">
-          <img src={book.thumbnail} alt={book.title} className="w-10 h-14 mr-2" />
+          <img src={book.thumbnail} alt={book.title} className="w-10 h-14 mr-2 rounded object-cover" />
           <div>
-            <p>{book.title}</p>
-            <p className="text-sm text-gray-600">{book.author}</p>
+            <p className="text-sm font-medium">{book.title}</p>
+            <p className="text-xs text-gray-600">{book.author}</p>
             <p className="text-xs text-gray-500">ISBN: {book.isbn}</p>
           </div>
         </div>
@@ -296,7 +325,7 @@ const App = ({ updateSW }) => {
                 <img
                   src={book.cover_url || noCoverThumb}
                   alt={book.title}
-                  className="w-16 h-24 mr-4"
+                  className="w-16 h-24 mr-4 rounded object-cover"
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{book.title}</p>
@@ -306,7 +335,6 @@ const App = ({ updateSW }) => {
                   <p className="text-xs text-gray-500">Status: {readingStatusLabels[book.reading_status]}</p>
                   <p className="text-xs text-gray-500">Added: {book.date_added}</p>
                   <p className="text-xs text-gray-500">Categories: {book.categories || 'None'}</p>
-                  <p className="text-sm text-gray-700 mt-2">{book.description}</p>
                 </div>
                 <button
                   onClick={() => handleEditBook(book)}
@@ -327,17 +355,47 @@ const App = ({ updateSW }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {showGlow && <div className="glow-border" />}
+      {bannerMessage && (
+        <div
+          className={`fixed top-0 left-0 w-full p-4 text-sm text-white text-center z-[10001] ${
+            bannerType === 'success' ? 'bg-green-500' : 'bg-red-500'
+          }`}
+        >
+          {bannerMessage}
+        </div>
+      )}
       <div className="pb-16">
         {screen === 'home' ? (
-          <HomeScreen setShowScanner={setShowScanner} lastScannedISBN={lastScannedISBN} />
+          <HomeScreen
+            setShowScanOptions={setShowScanOptions}
+            lastScannedISBN={lastScannedISBN}
+          />
         ) : (
           <MyBooksScreen myBooks={myBooks} />
         )}
       </div>
       {showScanner && (
         <ISBNScanner
+          isMultiScanning={false}
           onDetected={handleScan}
+          setError={setError}
+          bookExistsInIndexedDB={bookExistsInIndexedDB}
           onClose={() => setShowScanner(false)}
+        />
+      )}
+      {showMultiScanner && (
+        <ISBNScanner
+          isMultiScanning={true}
+          setMyBooks={setMyBooks}
+          setError={setError}
+          bookExistsInIndexedDB={bookExistsInIndexedDB}
+          addBookToIndexedDB={addBookToIndexedDB}
+          getBooksFromIndexedDB={getBooksFromIndexedDB}
+          setGlow={setShowGlow}
+          setBannerMessage={setBannerMessage}
+          setBannerType={setBannerType}
+          onClose={() => setShowMultiScanner(false)}
         />
       )}
       {scannedBook && (
@@ -358,7 +416,7 @@ const App = ({ updateSW }) => {
         />
       )}
       {error && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
           <div className="bg-white p-4 rounded-lg w-80">
             <p className="text-red-600 mb-4">{error}</p>
             <button

@@ -31,12 +31,12 @@ export default defineConfig({
         scope: "/booknest/",
         icons: [
           {
-            src: "/pwa-192x192.png",
+            src: "pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/pwa-512x512.png",
+            src: "pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
           },
@@ -70,10 +70,7 @@ export default defineConfig({
   },
   assetsInclude: ["**/*.wasm"],
   server: {
-    https: {
-      key: fs.readFileSync("./certs/localhost+2-key.pem"),
-      cert: fs.readFileSync("./certs/localhost+2.pem"),
-    },
+    
     host: true, // erlaubt Zugriff via IP-Adresse
     port: 5173,
   },
