@@ -1,8 +1,13 @@
-export default {
-  content: [
-    "./index.html", // Klassen in HTML
-    "./src/**/*.{js,jsx}", // alle React-Komponenten
-  ],
-  theme: { extend: {} },
+const konstaConfig = require("konsta/config");
+
+module.exports = konstaConfig({
+  content: ["./src/**/*.{js,jsx}"],
+  darkMode: "media",
+  theme: {
+    extend: {},
+  },
+  variants: {
+    extend: {},
+  },
   plugins: [],
-};
+});
