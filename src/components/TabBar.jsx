@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Tabbar, TabbarLink, Icon } from "konsta/react";
-import { MdOutlineEmojiFlags, MdListAlt, MdOutlineClass, MdBarChart, MdSearch, MdSettings } from "react-icons/md";
+import { MdMenuBook, MdListAlt, MdOutlineClass, MdBarChart, MdSearch, MdSettings } from "react-icons/md";
 
 const TabBar = ({ activeTab, onTabChange }) => {
   const [isLabels, setIsLabels] = useState(false);
   const [isIcons, setIsIcons] = useState(true);
 
   const tabs = [
-    { id: "tab-1", label: "Book List", icon: MdListAlt },
+    { id: "tab-1", label: "Book List", icon: MdMenuBook },
     { id: "tab-2", label: "Statistics", icon: MdBarChart },
     { id: "tab-3", label: "Online Search", icon: MdSearch },
     { id: "tab-4", label: "Settings", icon: MdSettings },
