@@ -1,10 +1,17 @@
 import { useState, useRef } from "react";
 import { Page, Navbar, Block, BlockTitle, List, ListItem, Link, Popover, Searchbar } from "konsta/react";
-import { books } from "../books";
-import { MdOutlineEmojiFlags, MdOutlineMenuBook, MdOutlineClass, MdViewList, MdSort, MdFilterList, MdMoreVert } from "react-icons/md";
+import {
+  MdOutlineEmojiFlags,
+  MdOutlineMenuBook,
+  MdOutlineClass,
+  MdViewList,
+  MdSort,
+  MdFilterList,
+  MdMoreVert,
+} from "react-icons/md";
 import BookListComponent from "../components/BookListComponent"; // Adjust path as needed
 
-const BookList = () => {
+const BookList = ({ books }) => {
   const [sortBy, setSortBy] = useState("title"); // Default sort by title
   const [sortOrder, setSortOrder] = useState("asc"); // Default ascending order
   const [popoverOpened, setPopoverOpened] = useState(false);
@@ -53,8 +60,8 @@ const BookList = () => {
       case "publishDate":
         comparison = new Date(a.publishDate) - new Date(b.publishDate);
         break;
-      case "readingStatus":
-        comparison = a.readingStatus.localeCompare(b.readingStatus);
+      case "reading_status": // Updated to match new field name
+        comparison = (a.reading_status || 0) - (b.reading_status || 0);
         break;
       default:
         comparison = a.title.localeCompare(b.title);
@@ -63,9 +70,7 @@ const BookList = () => {
   });
 
   const filteredBooks = searchQuery
-    ? sortedBooks.filter((book) =>
-        book.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? sortedBooks.filter((book) => book.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : sortedBooks;
 
   // Dynamic popover items
@@ -102,45 +107,12 @@ const BookList = () => {
 
   return (
     <Page className="bg-gray-100">
-      <Navbar large transparent centerTitle
+      <Navbar
+        large
+        transparent
+        centerTitle
         title="My Library"
         className="top-0 sticky"
-        left={
-          <div className="flex gap-10">
-            <Link
-              className="toggle-link text-gray-600"
-              navbar
-              onClick={() => openPopover("toggle", ".toggle-link")}
-            >
-              <MdViewList className="text-3xl" />
-            </Link>
-            <Link
-              className="sort-link text-gray-600"
-              navbar
-              onClick={() => openPopover("sort", ".sort-link")}
-            >
-              <MdSort className="text-3xl" />
-            </Link>
-          </div>
-        }
-        right={
-          <div className="flex gap-10">
-            <Link
-              className="filter-link text-gray-600"
-              navbar
-              onClick={() => openPopover("filter", ".filter-link")}
-            >
-              <MdFilterList className="text-3xl" />
-            </Link>
-            <Link
-              className="more-link text-gray-600"
-              navbar
-              onClick={() => openPopover("more", ".more-link")}
-            >
-              <MdMoreVert className="text-3xl" />
-            </Link>
-          </div>
-        }
         subnavbar={
           <Searchbar
             onInput={handleSearch}
@@ -156,30 +128,25 @@ const BookList = () => {
         books={filteredBooks}
         onItemClick={(book) => console.log(`Clicked: ${book.title}`)}
         renderAfter={(book) =>
-          book.readingStatus === "Finished" ? (
-            <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
-          ) : book.readingStatus === "Reading" ? (
+          book.reading_status === 0 ? (
+            <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />
+          ) : book.reading_status === 1 ? (
             <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
           ) : (
-            <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />
+            <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
           )
         }
         showDescription={true}
+        openPopover={openPopover}
+        popoverTargetRef={popoverTargetRef}
+        popoverOpened={popoverOpened}
+        popoverItems={popoverItems}
       />
 
-      <Popover
-        opened={popoverOpened}
-        target={popoverTargetRef.current}
-        onBackdropClick={closePopover}
-      >
+      <Popover opened={popoverOpened} target={popoverTargetRef.current} onBackdropClick={closePopover}>
         <List nested>
           {popoverItems[popoverOpened]?.map((item, index) => (
-            <ListItem
-              key={index}
-              title={item.title}
-              link
-              onClick={item.onClick}
-            />
+            <ListItem key={index} title={item.title} link onClick={item.onClick} />
           ))}
         </List>
       </Popover>
