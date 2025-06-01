@@ -9,17 +9,7 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("en-US", options);
 };
 
-const BookListComponent = ({
-  books,
-  onItemClick,
-  renderAfter,
-  emptyMessage = "Nothing found",
-  showDescription = true,
-  openPopover,
-  popoverTargetRef,
-  popoverOpened,
-  popoverItems,
-}) => {
+const BookListComponent = ({ books, onItemClick, renderAfter, showDescription = true, openPopover }) => {
   return (
     <div className="w-full">
       {/* Header with filter buttons */}
