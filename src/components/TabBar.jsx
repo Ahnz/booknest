@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { Tabbar, TabbarLink, Icon } from "konsta/react";
-import { MdMenuBook, MdListAlt, MdOutlineClass, MdBarChart, MdSearch, MdSettings } from "react-icons/md";
+import { MdMenuBook, MdBarChart, MdSearch, MdSettings } from "react-icons/md";
 
 const TabBar = ({ activeTab, onTabChange }) => {
-  const [isLabels, setIsLabels] = useState(false);
-  const [isIcons, setIsIcons] = useState(true);
+  const isLabels = false;
+  const isIcons = true;
 
   const tabs = [
     { id: "tab-1", label: "Book List", icon: MdMenuBook },

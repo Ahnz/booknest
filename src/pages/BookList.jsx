@@ -12,8 +12,6 @@ import {
 import BookListComponent from "../components/BookListComponent"; // Adjust path as needed
 
 const BookList = ({ books }) => {
-  const [sortBy, setSortBy] = useState("title"); // Default sort by title
-  const [sortOrder, setSortOrder] = useState("asc"); // Default ascending order
   const [popoverOpened, setPopoverOpened] = useState(false);
   const popoverTargetRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,15 +23,6 @@ const BookList = ({ books }) => {
 
   const closePopover = () => {
     setPopoverOpened(false);
-  };
-
-  const handleSort = (criterion) => {
-    if (sortBy === criterion) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(criterion);
-      setSortOrder("asc");
-    }
   };
 
   const handleSearch = (e) => {
@@ -48,26 +37,9 @@ const BookList = ({ books }) => {
     console.log("Disable");
   };
 
-  const sortedBooks = [...books].sort((a, b) => {
-    let comparison = 0;
-    switch (sortBy) {
-      case "title":
-        comparison = a.title.localeCompare(b.title);
-        break;
-      case "author":
-        comparison = a.author.localeCompare(b.author);
-        break;
-      case "publishDate":
-        comparison = new Date(a.publishDate) - new Date(b.publishDate);
-        break;
-      case "reading_status": // Updated to match new field name
-        comparison = (a.reading_status || 0) - (b.reading_status || 0);
-        break;
-      default:
-        comparison = a.title.localeCompare(b.title);
-    }
-    return sortOrder === "asc" ? comparison : -comparison;
-  });
+  const sortedBooks = [...books].sort((a, b) =>
+    a.title.localeCompare(b.title)
+  );
 
   const filteredBooks = searchQuery
     ? sortedBooks.filter((book) => book.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -138,9 +110,6 @@ const BookList = ({ books }) => {
         }
         showDescription={true}
         openPopover={openPopover}
-        popoverTargetRef={popoverTargetRef}
-        popoverOpened={popoverOpened}
-        popoverItems={popoverItems}
       />
 
       <Popover opened={popoverOpened} target={popoverTargetRef.current} onBackdropClick={closePopover}>

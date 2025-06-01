@@ -1,27 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Page, Navbar, Block, Searchbar, Link, Button } from "konsta/react";
 import { MdOutlineQrCodeScanner, MdAdd } from "react-icons/md";
-import startSearchImage from "../assets/startSearch.png"; // Adjust to /assets/ if in public folder
-import nothingFound from "../assets/nothingFound.png"; // Adjust to /assets/ if in public folder
-import BookListComponent from "../components/BookListComponent"; // Adjust path as needed
-import ISBNScanner from "../components/ISBNScanner"; // Adjust path as needed
-import noCoverThumb from "../assets/no_cover_thumb.gif"; // Adjust path as needed
+import startSearchImage from "../assets/startSearch.png";
+import nothingFound from "../assets/nothingFound.png";
+import BookListComponent from "../components/BookListComponent";
+import ISBNScanner from "../components/ISBNScanner";
+import noCoverThumb from "../assets/no_cover_thumb.gif";
 
-const OnlineSearch = ({
-  books,
-  setBooks,
-  searchQuery,
-  setSearchQuery,
-  searchResults,
-  setSearchResults,
-  isSearching,
-  setIsSearching,
-  error,
-  setError,
-  isScannerOpen,
-  setIsScannerOpen,
-}) => {
-  const [hasSearched, setHasSearched] = useState(false); // Track if a search has been performed
+const OnlineSearch = ({ books, onAddBook }) => {
+  const [searchQuery, setSearchQuery] = useState(
+    localStorage.getItem("searchQuery") || ""
+  );
+  const [searchResults, setSearchResults] = useState(() => {
+    const stored = localStorage.getItem("searchResults");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("searchQuery", searchQuery);
+    localStorage.setItem("searchResults", JSON.stringify(searchResults));
+  }, [searchQuery, searchResults]);
 
   // Handle book search
   const handleSearch = async () => {
@@ -62,7 +64,8 @@ const OnlineSearch = ({
           setSearchResults(validBooks);
         }
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       setError("Failed to fetch search results.");
       setSearchResults([]);
     }
@@ -78,10 +81,12 @@ const OnlineSearch = ({
     }
     const newBook = {
       ...book,
-      reading_status: 0, // Default to "To Read"
+      reading_status: 0,
       date_added: new Date().toISOString().split("T")[0],
     };
-    setBooks(newBook); // This will trigger IndexedDB update via AppComponent
+    onAddBook(newBook).catch((err) =>
+      setError(`Failed to add book: ${err.message}`)
+    );
   };
 
   const handleScanISBN = () => {
@@ -173,7 +178,9 @@ const OnlineSearch = ({
                 setError("This book is already in your list.");
                 return;
               }
-              setBooks(newBook);
+              onAddBook(newBook).catch((e) =>
+                setError(`Failed to add book: ${e.message}`)
+              );
             } catch (err) {
               let errorMessage = "Failed to fetch book details";
               if (err.name === "AbortError") errorMessage = "Request timed out";

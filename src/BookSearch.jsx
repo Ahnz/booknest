@@ -47,7 +47,8 @@ export default function BookSearch({ myBooks, setScannedBook, setError, bookExis
         });
         setSearchResults(books);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       setError('Failed to fetch search results.');
       setSearchResults([]);
     }
