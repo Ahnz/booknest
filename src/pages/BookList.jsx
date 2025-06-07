@@ -23,17 +23,6 @@ const BookList = ({ books }) => {
     setPopoverOpened(false);
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleClear = () => {
-    setSearchQuery("");
-  };
-
-  const handleDisable = () => {
-    console.log("Disable");
-  };
 
   const sortedBooks = [...books].sort((a, b) =>
     a.title.localeCompare(b.title)
@@ -79,9 +68,9 @@ const BookList = ({ books }) => {
     <Page className="bg-gray-100">
       <BookListHeader
         searchQuery={searchQuery}
-        onSearch={handleSearch}
-        onClear={handleClear}
-        onDisable={handleDisable}
+        onSearch={(e) => setSearchQuery(e.target.value)}
+        onClear={() => setSearchQuery("")}
+        onDisable={() => console.log("Disable")}
       />
       <BookListComponent
         books={filteredBooks}
