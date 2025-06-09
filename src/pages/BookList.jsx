@@ -1,19 +1,15 @@
 import { useState, useRef } from "react";
-import { Page, Navbar, Block, BlockTitle, List, ListItem, Link, Popover, Searchbar } from "konsta/react";
+import { Page } from "konsta/react";
 import {
   MdOutlineEmojiFlags,
   MdOutlineMenuBook,
   MdOutlineClass,
-  MdViewList,
-  MdSort,
-  MdFilterList,
-  MdMoreVert,
 } from "react-icons/md";
-import BookListComponent from "../components/BookListComponent"; // Adjust path as needed
+import BookListComponent from "../components/BookListComponent";
+import BookListHeader from "../components/BookListHeader";
+import BookListPopover from "../components/BookListPopover";
 
 const BookList = ({ books }) => {
-  const [sortBy, setSortBy] = useState("title"); // Default sort by title
-  const [sortOrder, setSortOrder] = useState("asc"); // Default ascending order
   const [popoverOpened, setPopoverOpened] = useState(false);
   const popoverTargetRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,47 +23,24 @@ const BookList = ({ books }) => {
     setPopoverOpened(false);
   };
 
-  const handleSort = (criterion) => {
-    if (sortBy === criterion) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(criterion);
-      setSortOrder("asc");
+  const renderReadingStatus = (status) => {
+    if (status === 0) {
+      return <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />;
     }
-  };
-
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleClear = () => {
-    setSearchQuery("");
-  };
-
-  const handleDisable = () => {
-    console.log("Disable");
-  };
-
-  const sortedBooks = [...books].sort((a, b) => {
-    let comparison = 0;
-    switch (sortBy) {
-      case "title":
-        comparison = a.title.localeCompare(b.title);
-        break;
-      case "author":
-        comparison = a.author.localeCompare(b.author);
-        break;
-      case "publishDate":
-        comparison = new Date(a.publishDate) - new Date(b.publishDate);
-        break;
-      case "reading_status": // Updated to match new field name
-        comparison = (a.reading_status || 0) - (b.reading_status || 0);
-        break;
-      default:
-        comparison = a.title.localeCompare(b.title);
+    if (status === 1) {
+      return (
+        <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
+      );
     }
-    return sortOrder === "asc" ? comparison : -comparison;
-  });
+    return (
+      <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
+    );
+  };
+
+
+  const sortedBooks = [...books].sort((a, b) =>
+    a.title.localeCompare(b.title)
+  );
 
   const filteredBooks = searchQuery
     ? sortedBooks.filter((book) => book.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -107,49 +80,26 @@ const BookList = ({ books }) => {
 
   return (
     <Page className="bg-gray-100">
-      <Navbar
-        large
-        transparent
-        centerTitle
-        title="My Library"
-        className="top-0 sticky"
-        subnavbar={
-          <Searchbar
-            onInput={handleSearch}
-            value={searchQuery}
-            onClear={handleClear}
-            disableButton
-            disableButtonText="Cancel"
-            onDisable={handleDisable}
-          />
-        }
+      <BookListHeader
+        searchQuery={searchQuery}
+        onSearch={(e) => setSearchQuery(e.target.value)}
+        onClear={() => setSearchQuery("")}
+        onDisable={() => console.log("Disable")}
       />
       <BookListComponent
         books={filteredBooks}
         onItemClick={(book) => console.log(`Clicked: ${book.title}`)}
-        renderAfter={(book) =>
-          book.reading_status === 0 ? (
-            <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />
-          ) : book.reading_status === 1 ? (
-            <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
-          ) : (
-            <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
-          )
-        }
+        renderAfter={(book) => renderReadingStatus(book.reading_status)}
         showDescription={true}
         openPopover={openPopover}
-        popoverTargetRef={popoverTargetRef}
-        popoverOpened={popoverOpened}
-        popoverItems={popoverItems}
       />
 
-      <Popover opened={popoverOpened} target={popoverTargetRef.current} onBackdropClick={closePopover}>
-        <List nested>
-          {popoverItems[popoverOpened]?.map((item, index) => (
-            <ListItem key={index} title={item.title} link onClick={item.onClick} />
-          ))}
-        </List>
-      </Popover>
+      <BookListPopover
+        opened={popoverOpened}
+        target={popoverTargetRef.current}
+        onClose={closePopover}
+        items={popoverItems[popoverOpened] || []}
+      />
     </Page>
   );
 };

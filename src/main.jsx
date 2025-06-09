@@ -13,7 +13,7 @@ try {
   window.BarcodeDetector = BarcodeDetectorPolyfill;
 }
 
-const updateSW = registerSW({
+registerSW({
   onNeedRefresh() {
     /* … */
   },
