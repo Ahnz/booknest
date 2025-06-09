@@ -101,21 +101,15 @@ const AppComponent = () => {
   }, []);
 
 
-  const handleAddBook = (newBook) => {
-    const dbPromise = initDB();
-    dbPromise
-      .then((db) => {
-        addBook(db, newBook)
-          .then(() => {
-            setBooks((prevBooks) => [...prevBooks, newBook]);
-          })
-          .catch((err) => {
-            console.error("Failed to add book:", err);
-          });
-      })
-      .catch((err) => {
-        console.error("IndexedDB error:", err);
-      });
+  const handleAddBook = async (newBook) => {
+    try {
+      const db = await initDB();
+      await addBook(db, newBook);
+      setBooks((prevBooks) => [...prevBooks, newBook]);
+    } catch (err) {
+      console.error("Failed to add book:", err);
+      throw err;
+    }
   };
 
   const renderPage = () => {
