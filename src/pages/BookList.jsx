@@ -23,6 +23,20 @@ const BookList = ({ books }) => {
     setPopoverOpened(false);
   };
 
+  const renderReadingStatus = (status) => {
+    if (status === 0) {
+      return <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />;
+    }
+    if (status === 1) {
+      return (
+        <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
+      );
+    }
+    return (
+      <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
+    );
+  };
+
 
   const sortedBooks = [...books].sort((a, b) =>
     a.title.localeCompare(b.title)
@@ -75,15 +89,7 @@ const BookList = ({ books }) => {
       <BookListComponent
         books={filteredBooks}
         onItemClick={(book) => console.log(`Clicked: ${book.title}`)}
-        renderAfter={(book) =>
-          book.reading_status === 0 ? (
-            <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />
-          ) : book.reading_status === 1 ? (
-            <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
-          ) : (
-            <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
-          )
-        }
+        renderAfter={(book) => renderReadingStatus(book.reading_status)}
         showDescription={true}
         openPopover={openPopover}
       />

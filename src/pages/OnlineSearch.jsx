@@ -91,6 +91,56 @@ const OnlineSearch = ({ books, onAddBook }) => {
     setIsScannerOpen(true);
   };
 
+  const handleISBNDetected = async (isbn) => {
+    setIsScannerOpen(false);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      if (data.totalItems === 0) {
+        setError("No book found for this ISBN.");
+        return;
+      }
+      const book = data.items[0];
+      const newBook = {
+        title: book.volumeInfo.title || "Unknown Title",
+        author: book.volumeInfo.authors?.join(", ") || "Unknown Author",
+        isbn13: isbn,
+        published_year: book.volumeInfo.publishedDate?.split("-")[0] || "Unknown",
+        reading_status: 0,
+        cover_url:
+          book.volumeInfo.imageLinks?.thumbnail ||
+          `https://buch.isbn.de/cover/${isbn}.webp`,
+        date_added: new Date().toISOString().split("T")[0],
+        description: (
+          book.volumeInfo.description ||
+          book.searchInfo?.textSnippet ||
+          "No description available."
+        ).slice(0, 150),
+        categories: book.volumeInfo.categories?.join(", ") || "",
+      };
+      if (books.some((b) => b.isbn13 === isbn)) {
+        setError("This book is already in your list.");
+        return;
+      }
+      onAddBook(newBook).catch((e) =>
+        setError(`Failed to add book: ${e.message}`)
+      );
+    } catch (err) {
+      let errorMessage = "Failed to fetch book details";
+      if (err.name === "AbortError") errorMessage = "Request timed out";
+      else if (err.message.includes("HTTP error")) errorMessage = err.message;
+      setError(errorMessage);
+      console.error("Error fetching book details:", err);
+    }
+  };
+
   // Handle clear button click to reset search state
   const handleClear = () => {
     console.log("Clearing search state"); // Debug log
@@ -118,50 +168,7 @@ const OnlineSearch = ({ books, onAddBook }) => {
       />
       {isScannerOpen && (
         <ISBNScanner
-          onDetected={async (isbn) => {
-            setIsScannerOpen(false);
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
-              const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`, {
-                signal: controller.signal,
-              });
-              clearTimeout(timeoutId);
-              if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-              const data = await response.json();
-              if (data.totalItems === 0) {
-                setError("No book found for this ISBN.");
-                return;
-              }
-              const book = data.items[0];
-              const newBook = {
-                title: book.volumeInfo.title || "Unknown Title",
-                author: book.volumeInfo.authors?.join(", ") || "Unknown Author",
-                isbn13: isbn,
-                published_year: book.volumeInfo.publishedDate?.split("-")[0] || "Unknown",
-                reading_status: 0,
-                cover_url: book.volumeInfo.imageLinks?.thumbnail || `https://buch.isbn.de/cover/${isbn}.webp`,
-                date_added: new Date().toISOString().split("T")[0],
-                description: (
-                  book.volumeInfo.description ||
-                  book.searchInfo?.textSnippet ||
-                  "No description available."
-                ).slice(0, 150),
-                categories: book.volumeInfo.categories?.join(", ") || "",
-              };
-              if (books.some((b) => b.isbn13 === isbn)) {
-                setError("This book is already in your list.");
-                return;
-              }
-              onAddBook(newBook).catch((e) => setError(`Failed to add book: ${e.message}`));
-            } catch (err) {
-              let errorMessage = "Failed to fetch book details";
-              if (err.name === "AbortError") errorMessage = "Request timed out";
-              else if (err.message.includes("HTTP error")) errorMessage = err.message;
-              setError(errorMessage);
-              console.error("Error fetching book details:", err);
-            }
-          }}
+          onDetected={handleISBNDetected}
           onClose={() => setIsScannerOpen(false)}
           setError={setError}
         />
