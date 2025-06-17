@@ -9,21 +9,11 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString("en-US", options);
 };
 
-const BookListComponent = ({
-  books,
-  onItemClick,
-  renderAfter,
-  emptyMessage = "Nothing found",
-  showDescription = true,
-  openPopover,
-  popoverTargetRef,
-  popoverOpened,
-  popoverItems,
-}) => {
+const BookListComponent = ({ books, onItemClick, renderAfter, showDescription = true, openPopover }) => {
   return (
     <div className="w-full">
       {/* Header with filter buttons */}
-      <div className="flex justify-between px-4 py-2 bg-white shadow-sm">
+      <div className="flex justify-between px-4 py-2 shadow-sm">
         <div className="flex gap-4">
           <Link className="toggle-link text-gray-600" onClick={() => openPopover("toggle", ".toggle-link")}>
             <MdViewList className="text-2xl" />

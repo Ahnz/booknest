@@ -1,27 +1,27 @@
-import { useState } from "react";
-import { Page, Navbar, Block, Searchbar, Link, Button } from "konsta/react";
-import { MdOutlineQrCodeScanner, MdAdd } from "react-icons/md";
-import startSearchImage from "../assets/startSearch.png"; // Adjust to /assets/ if in public folder
-import nothingFound from "../assets/nothingFound.png"; // Adjust to /assets/ if in public folder
-import BookListComponent from "../components/BookListComponent"; // Adjust path as needed
-import ISBNScanner from "../components/ISBNScanner"; // Adjust path as needed
-import noCoverThumb from "../assets/no_cover_thumb.gif"; // Adjust path as needed
+import { useState, useEffect } from "react";
+import { Page } from "konsta/react";
+import ISBNScanner from "../components/ISBNScanner";
+import noCoverThumb from "../assets/no_cover_thumb.gif";
+import SearchHeader from "../components/SearchHeader";
+import SearchResults from "../components/SearchResults";
 
-const OnlineSearch = ({
-  books,
-  setBooks,
-  searchQuery,
-  setSearchQuery,
-  searchResults,
-  setSearchResults,
-  isSearching,
-  setIsSearching,
-  error,
-  setError,
-  isScannerOpen,
-  setIsScannerOpen,
-}) => {
-  const [hasSearched, setHasSearched] = useState(false); // Track if a search has been performed
+const OnlineSearch = ({ books, onAddBook }) => {
+  const [searchQuery, setSearchQuery] = useState(
+    localStorage.getItem("searchQuery") || ""
+  );
+  const [searchResults, setSearchResults] = useState(() => {
+    const stored = localStorage.getItem("searchResults");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("searchQuery", searchQuery);
+    localStorage.setItem("searchResults", JSON.stringify(searchResults));
+  }, [searchQuery, searchResults]);
 
   // Handle book search
   const handleSearch = async () => {
@@ -62,7 +62,8 @@ const OnlineSearch = ({
           setSearchResults(validBooks);
         }
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       setError("Failed to fetch search results.");
       setSearchResults([]);
     }
@@ -78,14 +79,66 @@ const OnlineSearch = ({
     }
     const newBook = {
       ...book,
-      reading_status: 0, // Default to "To Read"
+      reading_status: 0,
       date_added: new Date().toISOString().split("T")[0],
     };
-    setBooks(newBook); // This will trigger IndexedDB update via AppComponent
+    onAddBook(newBook).catch((err) =>
+      setError(`Failed to add book: ${err.message}`)
+    );
   };
 
   const handleScanISBN = () => {
     setIsScannerOpen(true);
+  };
+
+  const handleISBNDetected = async (isbn) => {
+    setIsScannerOpen(false);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      const data = await response.json();
+      if (data.totalItems === 0) {
+        setError("No book found for this ISBN.");
+        return;
+      }
+      const book = data.items[0];
+      const newBook = {
+        title: book.volumeInfo.title || "Unknown Title",
+        author: book.volumeInfo.authors?.join(", ") || "Unknown Author",
+        isbn13: isbn,
+        published_year: book.volumeInfo.publishedDate?.split("-")[0] || "Unknown",
+        reading_status: 0,
+        cover_url:
+          book.volumeInfo.imageLinks?.thumbnail ||
+          `https://buch.isbn.de/cover/${isbn}.webp`,
+        date_added: new Date().toISOString().split("T")[0],
+        description: (
+          book.volumeInfo.description ||
+          book.searchInfo?.textSnippet ||
+          "No description available."
+        ).slice(0, 150),
+        categories: book.volumeInfo.categories?.join(", ") || "",
+      };
+      if (books.some((b) => b.isbn13 === isbn)) {
+        setError("This book is already in your list.");
+        return;
+      }
+      onAddBook(newBook).catch((e) =>
+        setError(`Failed to add book: ${e.message}`)
+      );
+    } catch (err) {
+      let errorMessage = "Failed to fetch book details";
+      if (err.name === "AbortError") errorMessage = "Request timed out";
+      else if (err.message.includes("HTTP error")) errorMessage = err.message;
+      setError(errorMessage);
+      console.error("Error fetching book details:", err);
+    }
   };
 
   // Handle clear button click to reset search state
@@ -106,148 +159,29 @@ const OnlineSearch = ({
 
   return (
     <Page className="bg-gray-100">
-      <Navbar
-        large
-        transparent
-        centerTitle
-        title="Add Books"
-        subnavbar={
-          <div className="flex items-center w-full px-4">
-            <Searchbar
-              value={searchQuery}
-              onInput={(e) => {
-                setSearchQuery(e.target.value);
-                console.log("Input changed, query:", e.target.value); // Debug log
-              }}
-              placeholder="Search books by title, author, or keyword..."
-              clearButton
-              disableButton
-              disableButtonText="Search"
-              onDisable={() => {
-                handleSearch(); // Trigger search without clearing query
-              }}
-              onClear={handleClear} // Reset search state on clear button (X)
-              className="w-[85%] mr-2"
-            />
-            <Link onClick={handleScanISBN} className="flex-shrink-0 text-gray-600" navbar>
-              <MdOutlineQrCodeScanner className="text-xl" />
-            </Link>
-          </div>
-        }
+      <SearchHeader
+        searchQuery={searchQuery}
+        onChangeQuery={setSearchQuery}
+        onSearch={handleSearch}
+        onClear={handleClear}
+        onScan={handleScanISBN}
       />
       {isScannerOpen && (
         <ISBNScanner
-          onDetected={async (isbn) => {
-            setIsScannerOpen(false); // Close scanner after detection
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
-              const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`, {
-                signal: controller.signal,
-              });
-              clearTimeout(timeoutId);
-              if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-              const data = await response.json();
-              if (data.totalItems === 0) {
-                setError("No book found for this ISBN.");
-                return;
-              }
-              const book = data.items[0];
-              const newBook = {
-                // Removed id, as isbn13 is now the keyPath
-                title: book.volumeInfo.title || "Unknown Title",
-                author: book.volumeInfo.authors?.join(", ") || "Unknown Author",
-                isbn13: isbn, // Use the scanned ISBN as the keyPath
-                published_year: book.volumeInfo.publishedDate?.split("-")[0] || "Unknown",
-                reading_status: 0,
-                cover_url: book.volumeInfo.imageLinks?.thumbnail || `https://buch.isbn.de/cover/${isbn}.webp`,
-                date_added: new Date().toISOString().split("T")[0],
-                description: (
-                  book.volumeInfo.description ||
-                  book.searchInfo?.textSnippet ||
-                  "No description available."
-                ).slice(0, 150),
-                categories: book.volumeInfo.categories?.join(", ") || "",
-              };
-              if (books.some((b) => b.isbn13 === isbn)) {
-                setError("This book is already in your list.");
-                return;
-              }
-              setBooks(newBook);
-            } catch (err) {
-              let errorMessage = "Failed to fetch book details";
-              if (err.name === "AbortError") errorMessage = "Request timed out";
-              else if (err.message.includes("HTTP error")) errorMessage = err.message;
-              setError(errorMessage);
-              console.error("Error fetching book details:", err);
-            }
-          }}
+          onDetected={handleISBNDetected}
           onClose={() => setIsScannerOpen(false)}
           setError={setError}
         />
       )}
-      {isSearching ? (
-        <p className="text-sm text-gray-600 mt-2 text-center">Searching...</p>
-      ) : (
-        <>
-          {error && !isScannerOpen && (
-            <Block strong inset className="text-center text-red-600">
-              {error}
-            </Block>
-          )}
-          {!hasSearched && searchResults.length === 0 && !isScannerOpen && (
-            <Block strong inset className="text-center">
-              <div className="flex flex-col items-center gap-4">
-                <img
-                  src={startSearchImage}
-                  onError={(e) => handleImageError(e, "https://via.placeholder.com/300x200?text=Start+Searching")}
-                  alt="Start searching"
-                  className="max-w-[80%] mx-auto"
-                />
-                <p className="text-gray-600">Start searching for books to add to your collection 📖</p>
-              </div>
-            </Block>
-          )}
-          {searchResults.length > 0 && !isScannerOpen && (
-            <BookListComponent
-              books={searchResults}
-              onItemClick={() => {}}
-              renderAfter={(book) => (
-                <Button small clear onClick={() => handleAddSearchResult(book)} className="text-blue-600">
-                  <MdAdd className="text-xl" />
-                </Button>
-              )}
-              showDescription={true}
-            />
-          )}
-          {error === "No books with ISBN-13 found for this search." && searchResults.length === 0 && !isScannerOpen && (
-            <Block strong inset className="text-center">
-              <div className="flex flex-col items-center gap-4">
-                <img
-                  src={nothingFound}
-                  onError={(e) => handleImageError(e, "https://via.placeholder.com/300x200?text=Nothing+Found")}
-                  alt="Nothing found"
-                  className="max-w-[80%] mx-auto"
-                />
-                <p className="text-gray-600">No books with ISBN-13 found.</p>
-              </div>
-            </Block>
-          )}
-          {error === "No books found for this search." && searchResults.length === 0 && !isScannerOpen && (
-            <Block strong inset className="text-center">
-              <div className="flex flex-col items-center gap-4">
-                <img
-                  src={nothingFound}
-                  onError={(e) => handleImageError(e, "https://via.placeholder.com/300x200?text=Nothing+Found")}
-                  alt="Nothing found"
-                  className="max-w-[80%] mx-auto"
-                />
-                <p className="text-gray-600">No books found.</p>
-              </div>
-            </Block>
-          )}
-        </>
-      )}
+      <SearchResults
+        isSearching={isSearching}
+        error={error}
+        searchResults={searchResults}
+        isScannerOpen={isScannerOpen}
+        hasSearched={hasSearched}
+        onAdd={handleAddSearchResult}
+        onImageError={handleImageError}
+      />
     </Page>
   );
 };

@@ -1,40 +1,11 @@
 import { useState, useEffect } from "react";
 import { App } from "konsta/react";
-import TabBar from "./components/TabBar";
+import TabBar from "./components/BottomBar";
 import BookList from "./pages/BookList";
 import Statistics from "./pages/Statistics";
 import OnlineSearch from "./pages/OnlineSearch";
 import Settings from "./pages/Settings";
 
-// CSV utility function
-const booksToCSV = (books) => {
-  const headers = [
-    "title",
-    "author",
-    "isbn13",
-    "published_year",
-    "reading_status",
-    "cover_url",
-    "date_added",
-    "description",
-    "categories",
-  ];
-  const escapeCSV = (str) => `"${str.replace(/"/g, '""')}"`;
-  const rows = books.map((book) =>
-    [
-      escapeCSV(book.title || ""),
-      escapeCSV(book.author || ""),
-      book.isbn13 || "",
-      book.published_year || "",
-      book.reading_status || 0,
-      escapeCSV(book.cover_url || ""),
-      book.date_added || "",
-      escapeCSV(book.description || ""),
-      escapeCSV(book.categories || ""),
-    ].join(",")
-  );
-  return [headers.join(","), ...rows].join("\n");
-};
 
 // IndexedDB setup
 const dbName = "BookLibrary";
@@ -108,12 +79,6 @@ const addBook = async (db, book) => {
 const AppComponent = () => {
   const [activeTab, setActiveTab] = useState("tab-1");
   const [books, setBooks] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isInitialMount, setIsInitialMount] = useState(true);
 
   useEffect(() => {
     let db;
@@ -135,43 +100,16 @@ const AppComponent = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // Clear OnlineSearch state on initial mount (refresh)
-    if (isInitialMount) {
-      localStorage.removeItem("searchQuery");
-      localStorage.removeItem("searchResults");
-      localStorage.removeItem("isSearching");
-      localStorage.removeItem("error");
-      localStorage.removeItem("isScannerOpen");
-      setIsInitialMount(false);
-    }
-    // Persist state on subsequent changes (tab switches or updates)
-    else {
-      localStorage.setItem("searchQuery", searchQuery);
-      localStorage.setItem("searchResults", JSON.stringify(searchResults));
-      localStorage.setItem("isSearching", isSearching);
-      localStorage.setItem("error", error || "");
-      localStorage.setItem("isScannerOpen", isScannerOpen);
-    }
-  }, [searchQuery, searchResults, isSearching, error, isScannerOpen, isInitialMount]);
 
-  const handleAddBook = (newBook) => {
-    const dbPromise = initDB();
-    dbPromise
-      .then((db) => {
-        addBook(db, newBook)
-          .then(() => {
-            setBooks((prevBooks) => [...prevBooks, newBook]);
-          })
-          .catch((error) => {
-            console.error("Failed to add book:", error);
-            setError("Failed to add book: " + error.message);
-          });
-      })
-      .catch((error) => {
-        console.error("IndexedDB error:", error);
-        setError("IndexedDB error: " + error.message);
-      });
+  const handleAddBook = async (newBook) => {
+    try {
+      const db = await initDB();
+      await addBook(db, newBook);
+      setBooks((prevBooks) => [...prevBooks, newBook]);
+    } catch (err) {
+      console.error("Failed to add book:", err);
+      throw err;
+    }
   };
 
   const renderPage = () => {
@@ -181,22 +119,7 @@ const AppComponent = () => {
       case "tab-2":
         return <Statistics />;
       case "tab-3":
-        return (
-          <OnlineSearch
-            books={books}
-            setBooks={handleAddBook}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            searchResults={searchResults}
-            setSearchResults={setSearchResults}
-            isSearching={isSearching}
-            setIsSearching={setIsSearching}
-            error={error}
-            setError={setError}
-            isScannerOpen={isScannerOpen}
-            setIsScannerOpen={setIsScannerOpen}
-          />
-        );
+        return <OnlineSearch books={books} onAddBook={handleAddBook} />;
       case "tab-4":
         return <Settings />;
       default:
