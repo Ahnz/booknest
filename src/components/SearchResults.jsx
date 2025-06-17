@@ -41,7 +41,7 @@ const SearchResults = ({
               className="max-w-[80%] mx-auto"
             />
             <p className="text-gray-600">
-              Start searching for books to add to your collection 📖
+              Start searching for books to add to your collection
             </p>
           </div>
         </Block>

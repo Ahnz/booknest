@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { App } from "konsta/react";
-import TabBar from "./components/TabBar";
+import TabBar from "./components/BottomBar";
 import BookList from "./pages/BookList";
 import Statistics from "./pages/Statistics";
 import OnlineSearch from "./pages/OnlineSearch";
