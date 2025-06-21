@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
@@ -10,7 +9,6 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
-        // zusätzliche Dateien, die immer gecached werden
         "favicon.svg",
         "robots.txt",
         "apple-touch-icon.png",
@@ -40,7 +38,6 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // hier kannst du Caching-Strategien anpassen
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -57,6 +54,11 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      "@": "/src",
+    },
+  },
   optimizeDeps: {
     exclude: ["@undecaf/zbar-wasm"],
   },
@@ -67,7 +69,7 @@ export default defineConfig({
   },
   assetsInclude: ["**/*.wasm"],
   server: {
-    host: true, // erlaubt Zugriff via IP-Adresse
+    host: true,
     port: 5173,
   },
 });

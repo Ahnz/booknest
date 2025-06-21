@@ -1,10 +1,6 @@
 import { useState, useRef } from "react";
 import { Page } from "konsta/react";
-import {
-  MdOutlineEmojiFlags,
-  MdOutlineMenuBook,
-  MdOutlineClass,
-} from "react-icons/md";
+import { MdOutlineEmojiFlags, MdOutlineMenuBook, MdOutlineClass } from "react-icons/md";
 import BookListComponent from "../components/BookListComponent";
 import BookListHeader from "../components/BookListHeader";
 import BookListPopover from "../components/BookListPopover";
@@ -28,19 +24,12 @@ const BookList = ({ books }) => {
       return <MdOutlineClass className="text-gray-600 text-2xl" title="To Read" />;
     }
     if (status === 1) {
-      return (
-        <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />
-      );
+      return <MdOutlineMenuBook className="text-blue-600 text-2xl" title="Reading" />;
     }
-    return (
-      <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />
-    );
+    return <MdOutlineEmojiFlags className="text-green-600 text-2xl" title="Finished" />;
   };
 
-
-  const sortedBooks = [...books].sort((a, b) =>
-    a.title.localeCompare(b.title)
-  );
+  const sortedBooks = [...books].sort((a, b) => a.title.localeCompare(b.title));
 
   const filteredBooks = searchQuery
     ? sortedBooks.filter((book) => book.title.toLowerCase().includes(searchQuery.toLowerCase()))
