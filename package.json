@@ -12,6 +12,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.44.1",
     "@tailwindcss/postcss": "^4.1.5",
     "@undecaf/barcode-detector-polyfill": "^0.9.21",
     "framework7-icons": "^5.0.5",
