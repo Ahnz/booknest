@@ -2,25 +2,65 @@ import { useState, lazy, Suspense } from "react";
 import { App } from "konsta/react";
 import TabBar from "./components/TabBar";
 import { DummyPage } from "./pages/DummyPage";
+import { IconType } from "react-icons";
+import {
+  MdMenuBook,
+  MdFavorite,
+  MdSearch,
+  MdBarChart,
+  MdSettings,
+  MdHomeFilled,
+  MdStarRate,
+  MdOutlineFavorite,
+  MdOutlineStar,
+} from "react-icons/md";
 
-// Lazy load BookList to improve initial load performance
+// Lazy load BookList
 const BookList = lazy(() => import("./pages/BookList"));
 
 interface Tab {
   id: string;
   title: string;
+  icon: IconType;
   component: React.ReactNode;
 }
 
+// Centralized tab configuration
 const tabs: Tab[] = [
-  { id: "tab-1", title: "Home", component: <BookList /> },
-  { id: "tab-2", title: "Settings", component: <DummyPage title="Settings" /> },
-  { id: "tab-3", title: "Search", component: <DummyPage title="Search" /> },
-  { id: "tab-4", title: "Account", component: <DummyPage title="Account" /> },
+  {
+    id: "my_books",
+    title: "My Books",
+    icon: MdHomeFilled,
+    component: <BookList />,
+  },
+  {
+    id: "search",
+    title: "Search",
+    icon: MdSearch,
+    component: <DummyPage title="Search" />,
+  },
+  {
+    id: "favorites",
+    title: "Favorites",
+    icon: MdOutlineStar,
+    component: <DummyPage title="Favorites" />,
+  },
+  {
+    id: "statistics",
+    title: "Statistics",
+    icon: MdBarChart,
+    component: <DummyPage title="Statistics" />,
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    icon: MdSettings,
+    component: <DummyPage title="Settings" />,
+  },
 ];
 
 const AppComponent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("tab-1");
+  const [activeTab, setActiveTab] = useState<string>("my_books");
 
   return (
     <App theme="ios" dark={false}>
@@ -34,7 +74,7 @@ const AppComponent: React.FC = () => {
           </div>
         ))}
       </Suspense>
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
     </App>
   );
 };

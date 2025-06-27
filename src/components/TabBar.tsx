@@ -1,28 +1,21 @@
 import { Tabbar, TabbarLink, Icon } from "konsta/react";
-import { MdMenuBook, MdBarChart, MdSearch, MdSettings } from "react-icons/md";
 import { IconType } from "react-icons";
 
 interface Tab {
   id: string;
-  label: string;
+  title: string;
   icon: IconType;
 }
 
 interface TabBarProps {
+  tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
 }
 
-const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
+const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onTabChange }) => {
   const isLabels: boolean = false;
   const isIcons: boolean = true;
-
-  const tabs: Tab[] = [
-    { id: "tab-1", label: "Book List", icon: MdMenuBook },
-    { id: "tab-2", label: "Statistics", icon: MdBarChart },
-    { id: "tab-3", label: "Online Search", icon: MdSearch },
-    { id: "tab-4", label: "Settings", icon: MdSettings },
-  ];
 
   return (
     <Tabbar labels={isLabels} icons={isIcons} className="left-0 bottom-0 fixed">
@@ -38,7 +31,7 @@ const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
               material={<tab.icon className="w-6 h-6" />}
             />
           )}
-          {isLabels && <span>{tab.label}</span>}
+          {isLabels && <span>{tab.title}</span>}
         </TabbarLink>
       ))}
     </Tabbar>
