@@ -3,6 +3,7 @@ import { Page } from "konsta/react";
 import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
 import { searchBooks, searchByISBN } from "../services/GoogleBooksAPI";
+import ScannerModal from "@/components/ScannerModal";
 
 const SearchPage: React.FC = () => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
@@ -11,6 +12,7 @@ const SearchPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Book[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const handleTextSearch = async () => {
     setIsSearching(true);
@@ -74,15 +76,22 @@ const SearchPage: React.FC = () => {
         <button onClick={handleTextSearch} disabled={isSearching || isLoading}>
           {isSearching ? "Searching..." : "Search"}
         </button>
-        <input
-          type="text"
-          value={isbnQuery}
-          onChange={(e) => setIsbnQuery(e.target.value)}
-          placeholder="Search by ISBN..."
-        />
-        <button onClick={handleISBNSearch} disabled={isSearching || isLoading}>
-          {isSearching ? "Searching..." : "Search ISBN"}
-        </button>
+        <div>
+          <button onClick={() => setScannerOpen(true)} type="button">
+            Bücher scannen
+          </button>
+
+          {scannerOpen && (
+            <ScannerModal
+              onClose={() => setScannerOpen(false)}
+              searchByISBN={function (
+                isbn: string
+              ): Promise<Omit<Book, "list" | "isbn"> | null> {
+                throw new Error("Function not implemented.");
+              }}
+            />
+          )}
+        </div>
         {(error || dbError) && <p>{error || dbError}</p>}
         {searchResults.length === 0 && !isSearching && !error && !dbError && (
           <p>No results. Enter a query or ISBN.</p>
