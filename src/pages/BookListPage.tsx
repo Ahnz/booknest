@@ -1,8 +1,8 @@
-import { useBooksDB } from "../hooks/useBooksDB";
+import { useBooksContext } from "../context/BooksContext";
 import { ReadingStatus } from "../types/Book";
 
 export default function BookListPage() {
-  const [books, setBooks, isLoading, error] = useBooksDB();
+  const { books, setBooks, isLoading, error } = useBooksContext();
 
   const addDummy = () => {
     setBooks([
@@ -28,10 +28,11 @@ export default function BookListPage() {
   return (
     <div>
       <button onClick={addDummy}>Dummy-Buch hinzufügen</button>
+      {error && <p>{error}</p>}
       <ul>
         {books.map((b) => (
           <li key={b.isbn13}>
-            {b.title} ({b.author}){" "}
+            {b.title} ({b.author})
             <button onClick={() => removeBook(b.isbn13)}>Löschen</button>
           </li>
         ))}

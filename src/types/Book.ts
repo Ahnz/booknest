@@ -16,3 +16,10 @@ export interface Book {
   published_year?: string;
   reading_status?: ReadingStatus; 
 }
+
+export interface BooksState {
+  books: Book[];
+  setBooks: (update: Book[] | ((prev: Book[]) => Book[])) => void;
+  isLoading: boolean;
+  error: string | null;
+}

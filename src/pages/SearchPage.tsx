@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Page } from "konsta/react";
-import { useBooksDB } from "../hooks/useBooksDB";
+import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
 import { searchBooks, searchByISBN } from "../services/GoogleBooksAPI";
 
 const SearchPage: React.FC = () => {
-  const [books, setBooks, isLoading, dbError] = useBooksDB();
+  const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [isbnQuery, setIsbnQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Book[]>([]);
@@ -90,7 +90,7 @@ const SearchPage: React.FC = () => {
         <ul>
           {searchResults.map((book) => (
             <li key={book.isbn13}>
-              {book.title} ({book.author}){" "}
+              {book.title} ({book.author})
               <button onClick={() => handleAddBook(book)} disabled={isLoading}>
                 Add
               </button>

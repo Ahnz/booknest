@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Book } from "../types/Book";
+import { Book, BooksState } from "../types/Book";
 
 // Database configuration for IndexedDB
 const DB_NAME = "BookLibrary";
@@ -46,12 +46,7 @@ function booksDiffer(book1: Book, book2: Book): boolean {
 }
 
 // Custom hook for managing books in IndexedDB with a useState-like API
-export function useBooksDB(): [
-  Book[],
-  (targetBooksOrUpdater: Book[] | ((prev: Book[]) => Book[])) => void,
-  boolean,
-  string | null
-] {
+export function useBooksDB(): BooksState {
   const [books, setBooksState] = useState<Book[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -198,5 +193,5 @@ export function useBooksDB(): [
     [books]
   );
 
-  return [books, setBooks, isLoading, error];
+  return { books, setBooks, isLoading, error };  
 }
