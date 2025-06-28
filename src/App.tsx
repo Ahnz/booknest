@@ -14,9 +14,11 @@ import {
   MdOutlineFavorite,
   MdOutlineStar,
 } from "react-icons/md";
+import BookListPage from "./pages/BookListPage";
+import SearchPage from "./pages/SearchPage";
 
 // Lazy load BookList
-const BookList = lazy(() => import("./pages/BookList"));
+const BookList = lazy(() => import("./pages/BookListPage"));
 
 interface Tab {
   id: string;
@@ -31,13 +33,13 @@ const tabs: Tab[] = [
     id: "my_books",
     title: "My Books",
     icon: MdHomeFilled,
-    component: <BookList />,
+    component: <BookListPage />,
   },
   {
     id: "search",
     title: "Search",
     icon: MdSearch,
-    component: <DummyPage title="Search" />,
+    component: <SearchPage />,
   },
   {
     id: "favorites",
