@@ -60,11 +60,11 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["@undecaf/zbar-wasm"],
+    exclude: ["@preflower/barcode-detector-polyfill"],
   },
   build: {
     rollupOptions: {
-      external: ["@undecaf/zbar-wasm"],
+      external: ["@preflower/barcode-detector-polyfill"],
     },
   },
   assetsInclude: ["**/*.wasm"],

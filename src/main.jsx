@@ -4,14 +4,6 @@ import { App } from "konsta/react";
 import AppComponent from "./App";
 import "./index.css";
 import { registerSW } from "virtual:pwa-register";
-import { BarcodeDetectorPolyfill } from "@undecaf/barcode-detector-polyfill";
-
-try {
-  window.BarcodeDetector.getSupportedFormats();
-} catch {
-  BarcodeDetectorPolyfill.wasmModuleUrl = "https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.9.15/dist/zbar.wasm";
-  window.BarcodeDetector = BarcodeDetectorPolyfill;
-}
 
 registerSW({
   onNeedRefresh() {

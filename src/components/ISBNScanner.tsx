@@ -1,116 +1,43 @@
-import React, { useRef, useState, useEffect } from "react";
+import React from "react";
+import {
+  BarcodeScanner,
+  DetectedBarcode,
+  useTorch,
+} from "react-barcode-scanner";
+import "react-barcode-scanner/polyfill";
 
-declare global {
-  interface Window {
-    BarcodeDetector: any;
-  }
-}
-
+// Props for ISBNScanner component
 interface ISBNScannerProps {
-  isMultiScanning: boolean;
   onDetected: (isbn: string) => void;
-  onClose: () => void;
 }
 
-const ISBNScanner: React.FC<ISBNScannerProps> = ({
-  isMultiScanning,
-  onDetected,
-  onClose,
-}) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const lastScannedISBNRef = useRef<string | null>(null);
-  const [isScanning, setIsScanning] = useState(true);
-  const activeRef = useRef(true);
+// ISBN scanner with torch support
+const ISBNScanner: React.FC<ISBNScannerProps> = ({ onDetected }) => {
+  const { isTorchSupported, isTorchOn, setIsTorchOn } = useTorch();
 
-  useEffect(() => {
-    let detector: any;
-    activeRef.current = true;
-
-    const stopCamera = () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-    };
-
-    const scanLoop = async () => {
-      if (!activeRef.current || !isScanning || !videoRef.current || !detector)
-        return;
-      try {
-        const barcodes = await detector.detect(videoRef.current);
-        if (
-          barcodes.length &&
-          barcodes[0].rawValue !== lastScannedISBNRef.current
-        ) {
-          const isbn: string = barcodes[0].rawValue;
-          lastScannedISBNRef.current = isbn;
-          await onDetected(isbn);
-
-          if (!isMultiScanning) {
-            setIsScanning(false);
-            activeRef.current = false;
-            stopCamera();
-            onClose();
-          } else {
-            setTimeout(() => {
-              lastScannedISBNRef.current = null;
-            }, 1200);
-          }
-        }
-        if (activeRef.current && isScanning) {
-          requestAnimationFrame(scanLoop);
-        }
-      } catch (err) {
-        if (activeRef.current && isScanning) {
-          requestAnimationFrame(scanLoop);
-        }
-      }
-    };
-
-    const initScanner = async () => {
-      try {
-        detector = new window.BarcodeDetector({ formats: ["ean_13"] });
-        streamRef.current = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = streamRef.current;
-          videoRef.current.oncanplay = () => {
-            scanLoop();
-          };
-        }
-      } catch (err) {
-        alert("Kamera konnte nicht gestartet werden!");
-        activeRef.current = false;
-      }
-    };
-
-    initScanner();
-
-    return () => {
-      activeRef.current = false;
-      setIsScanning(false);
-      stopCamera();
-    };
-  }, [isMultiScanning, onDetected, onClose]);
-
-  const handleClose = () => {
-    setIsScanning(false);
-    activeRef.current = false;
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+  // Handle barcode detection
+  const handleCapture = (barcodes: DetectedBarcode[]) => {
+    if (barcodes.length > 0) {
+      onDetected(barcodes[0].rawValue);
     }
-    onClose();
   };
 
   return (
-    <div>
-      <video ref={videoRef} muted playsInline autoPlay />
-      <button onClick={handleClose} type="button">
-        ✕
-      </button>
+    <div style={{ width: "100%", height: "360px", position: "relative" }}>
+      {/* Barcode scanner video feed */}
+      <BarcodeScanner
+        options={{
+          formats: ["ean_13", "upc_a"], // Support ISBN-13 and ISBN-10
+          delay: 800, // Scan interval
+        }}
+        onCapture={handleCapture}
+      />
+      {/* Torch toggle button */}
+      {isTorchSupported && (
+        <button onClick={() => setIsTorchOn(!isTorchOn)}>
+          {isTorchOn ? "Torch Off" : "Torch On"}
+        </button>
+      )}
     </div>
   );
 };

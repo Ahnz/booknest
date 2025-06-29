@@ -82,14 +82,7 @@ const SearchPage: React.FC = () => {
           </button>
 
           {scannerOpen && (
-            <ScannerModal
-              onClose={() => setScannerOpen(false)}
-              searchByISBN={function (
-                isbn: string
-              ): Promise<Omit<Book, "list" | "isbn"> | null> {
-                throw new Error("Function not implemented.");
-              }}
-            />
+            <ScannerModal onClose={() => setScannerOpen(false)} />
           )}
         </div>
         {(error || dbError) && <p>{error || dbError}</p>}
