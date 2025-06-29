@@ -10,7 +10,7 @@ const DummyPage: React.FC<DummyPageProps> = ({ title }) => {
       <Navbar title={title} />
       <Block strong inset>
         <p>
-          This is a placeholder for the {title} page. Add {title.toLowerCase()}
+          This is a placeholder for the {title} page. Add {title.toLowerCase()}{" "}
           options here.
         </p>
       </Block>
