@@ -17,6 +17,8 @@ import {
 import BookListPage from "./pages/BookListPage";
 import SearchPage from "./pages/SearchPage";
 import { BooksProvider } from "./context/BooksContext";
+import { Navbar } from "konsta/react";
+import { Page } from "konsta/react";
 
 // Lazy load BookList
 const BookList = lazy(() => import("./pages/BookListPage"));
@@ -67,18 +69,21 @@ const AppComponent: React.FC = () => {
 
   return (
     <App theme="ios" dark={false}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <BooksProvider>
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              style={{ display: activeTab === tab.id ? "block" : "none" }}
-            >
-              {tab.component}
-            </div>
-          ))}
-        </BooksProvider>
-      </Suspense>
+      <Page>
+        <Navbar title={activeTab} transparent large />
+        <Suspense fallback={<div>Loading...</div>}>
+          <BooksProvider>
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                style={{ display: activeTab === tab.id ? "block" : "none" }}
+              >
+                {tab.component}
+              </div>
+            ))}
+          </BooksProvider>
+        </Suspense>
+      </Page>
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
     </App>
   );

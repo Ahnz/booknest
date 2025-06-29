@@ -43,48 +43,44 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <Page>
+    <div>
+      {/* Search */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search by title, author..."
+      />
+      <button onClick={handleTextSearch} disabled={isSearching || isLoading}>
+        {isSearching ? "Searching..." : "Search"}
+      </button>
+
+      {/* Scanner */}
       <div>
-        {/* Search */}
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by title, author..."
-        />
-        <button onClick={handleTextSearch} disabled={isSearching || isLoading}>
-          {isSearching ? "Searching..." : "Search"}
+        <button onClick={() => setScannerOpen(true)} type="button">
+          Scan Books
         </button>
-
-        {/* Scanner */}
-        <div>
-          <button onClick={() => setScannerOpen(true)} type="button">
-            Scan Books
-          </button>
-          {scannerOpen && (
-            <ScannerModal onClose={() => setScannerOpen(false)} />
-          )}
-        </div>
-
-        {/* Error handling */}
-        {(error || dbError) && <p>{error || dbError}</p>}
-
-        {/* Book list */}
-        <BookListComponent
-          onListItemAction={handleAddBook}
-          books={searchResults ?? []}
-          emptyText={
-            isSearching
-              ? "Searching..."
-              : searchResults === undefined
-              ? "Enter a query and search for books!"
-              : searchResults.length === 0 && !isSearching && !error && !dbError
-              ? "No books found"
-              : undefined
-          }
-        />
+        {scannerOpen && <ScannerModal onClose={() => setScannerOpen(false)} />}
       </div>
-    </Page>
+
+      {/* Error handling */}
+      {(error || dbError) && <p>{error || dbError}</p>}
+
+      {/* Book list */}
+      <BookListComponent
+        onListItemAction={handleAddBook}
+        books={searchResults ?? []}
+        emptyText={
+          isSearching
+            ? "Searching..."
+            : searchResults === undefined
+            ? "Enter a query and search for books!"
+            : searchResults.length === 0 && !isSearching && !error && !dbError
+            ? "No books found"
+            : undefined
+        }
+      />
+    </div>
   );
 };
 
