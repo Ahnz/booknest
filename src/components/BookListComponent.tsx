@@ -4,7 +4,7 @@ import { List, ListItem, Link, Block } from "konsta/react";
 
 type BookListComponentProps = {
   books: Book[];
-  onListItemAction?: (isbn13: string) => void;
+  onListItemAction?: (book: Book) => void;
   emptyImage?: string;
   emptyText?: string;
   emptyNode?: React.ReactNode;
@@ -62,7 +62,7 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
               alt={`${book.title} cover`}
             />
           }
-          onClick={() => onListItemAction && onListItemAction(book.isbn13)}
+          onClick={() => onListItemAction && onListItemAction(book)}
         />
       ))
     )}

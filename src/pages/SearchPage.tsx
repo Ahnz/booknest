@@ -4,12 +4,14 @@ import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
 import { searchBooks, searchByISBN } from "../services/GoogleBooksAPI";
 import ScannerModal from "@/components/ScannerModal";
+import { BookListComponent } from "@/components/BookListComponent";
 
 const SearchPage: React.FC = () => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isbnQuery, setIsbnQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Book[]>([]);
+  const [searchResults, setSearchResults] = useState<Book[] | undefined>(
+    undefined
+  );
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -20,30 +22,6 @@ const SearchPage: React.FC = () => {
     try {
       const results = await searchBooks(searchQuery);
       setSearchResults(results);
-      if (results.length === 0) {
-        setError("No books found.");
-      }
-    } catch (error: any) {
-      setError(error.message);
-      setSearchResults([]);
-    }
-    setIsSearching(false);
-  };
-
-  const handleISBNSearch = async () => {
-    if (!/^\d{10,13}$/.test(isbnQuery)) {
-      setError("Enter a valid 10 or 13-digit ISBN.");
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    setError(null);
-    try {
-      const results = await searchByISBN(isbnQuery);
-      setSearchResults(results);
-      if (results.length === 0) {
-        setError("No book found.");
-      }
     } catch (error: any) {
       setError(error.message);
       setSearchResults([]);
@@ -67,6 +45,7 @@ const SearchPage: React.FC = () => {
   return (
     <Page>
       <div>
+        {/* Search */}
         <input
           type="text"
           value={searchQuery}
@@ -76,29 +55,34 @@ const SearchPage: React.FC = () => {
         <button onClick={handleTextSearch} disabled={isSearching || isLoading}>
           {isSearching ? "Searching..." : "Search"}
         </button>
+
+        {/* Scanner */}
         <div>
           <button onClick={() => setScannerOpen(true)} type="button">
-            Bücher scannen
+            Scan Books
           </button>
-
           {scannerOpen && (
             <ScannerModal onClose={() => setScannerOpen(false)} />
           )}
         </div>
+
+        {/* Error handling */}
         {(error || dbError) && <p>{error || dbError}</p>}
-        {searchResults.length === 0 && !isSearching && !error && !dbError && (
-          <p>No results. Enter a query or ISBN.</p>
-        )}
-        <ul>
-          {searchResults.map((book) => (
-            <li key={book.isbn13}>
-              {book.title} ({book.authors})
-              <button onClick={() => handleAddBook(book)} disabled={isLoading}>
-                Add
-              </button>
-            </li>
-          ))}
-        </ul>
+
+        {/* Book list */}
+        <BookListComponent
+          onListItemAction={handleAddBook}
+          books={searchResults ?? []}
+          emptyText={
+            isSearching
+              ? "Searching..."
+              : searchResults === undefined
+              ? "Enter a query and search for books!"
+              : searchResults.length === 0 && !isSearching && !error && !dbError
+              ? "No books found"
+              : undefined
+          }
+        />
       </div>
     </Page>
   );
