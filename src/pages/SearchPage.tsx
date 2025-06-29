@@ -58,8 +58,8 @@ const SearchPage: React.FC = () => {
     }
     const newBook: Book = {
       ...book,
-      reading_status: ReadingStatus.Unread,
-      date_added: new Date().toISOString().split("T")[0],
+      readingStatus: ReadingStatus.WantToRead,
+      dateAdded: new Date().toISOString().split("T")[0],
     };
     setBooks([...books, newBook]);
   };
@@ -92,7 +92,7 @@ const SearchPage: React.FC = () => {
         <ul>
           {searchResults.map((book) => (
             <li key={book.isbn13}>
-              {book.title} ({book.author})
+              {book.title} ({book.authors})
               <button onClick={() => handleAddBook(book)} disabled={isLoading}>
                 Add
               </button>

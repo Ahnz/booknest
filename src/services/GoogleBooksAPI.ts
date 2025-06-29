@@ -5,15 +5,20 @@ interface GoogleBookItem {
   id: string;
   volumeInfo: {
     title?: string;
+    subtitle?: string;
     authors?: string[];
-    industryIdentifiers?: { type: string; identifier: string }[];
+    publisher?: string;
     publishedDate?: string;
-    imageLinks?: { thumbnail?: string };
+    industryIdentifiers?: { type: string; identifier: string }[];
+    pageCount?: number;
     categories?: string[];
     description?: string;
+    imageLinks?: { thumbnail?: string };
+    previewLink?: string;
   };
   searchInfo?: { textSnippet?: string };
 }
+
 
 // Interface for Google Books API response
 interface GoogleBooksResponse {
@@ -22,22 +27,43 @@ interface GoogleBooksResponse {
   items?: GoogleBookItem[];
 }
 
-/** Maps a Google Books API item to a Book interface */
-const mapToBook = (item: GoogleBookItem, isbn?: string): Book => ({
-  title: item.volumeInfo.title || "Unknown Title",
-  author: item.volumeInfo.authors?.join(", ") || "Unknown Author",
-  isbn13:
+
+const mapToBook = (item: GoogleBookItem, isbn?: string): Book => {
+  const identifiers = item.volumeInfo.industryIdentifiers || [];
+  // ISBN-13: May not be present for old, non-standard, or self-published books
+  const isbn13 =
     isbn ||
-    item.volumeInfo.industryIdentifiers?.find((id) => id.type === "ISBN_13")?.identifier ||
-    item.id,
-  published_year: item.volumeInfo.publishedDate?.split("-")[0] || "Unknown",
-  cover_url: item.volumeInfo.imageLinks?.thumbnail || "https://placehold.co/100x150",
-  categories: item.volumeInfo.categories?.join(", ") || "",
-  description:
-    item.volumeInfo.description || item.searchInfo?.textSnippet || "No description available.",
-  reading_status: undefined,
-  date_added: undefined,
-});
+    identifiers.find((id) => id.type === "ISBN_13")?.identifier ||
+    "";
+  // ISBN-10: Optional, not all books have this (especially new releases)
+  const isbn10 = identifiers.find((id) => id.type === "ISBN_10")?.identifier;
+
+  return {
+    isbn13: isbn13 || item.id,   // Edge: fallback to Google id if ISBN13 is missing (should rarely happen)
+    isbn10,                      // Optional: undefined if not present
+    title: item.volumeInfo.title || "Unknown Title", 
+    subtitle: item.volumeInfo.subtitle,              // Optional: many books have no subtitle
+    authors: item.volumeInfo.authors || ["Unknown Author"], 
+    publisher: item.volumeInfo.publisher,            // Optional: may be missing (esp. old/self-published works)
+    publishedDate: item.volumeInfo.publishedDate,    
+    pageCount: item.volumeInfo.pageCount,            // Optional: can be missing or inaccurate
+    categories: item.volumeInfo.categories,          // Optional
+    description:
+      item.volumeInfo.description ||                 // Primary description (may be HTML)
+      item.searchInfo?.textSnippet ||                // Fallback: Short snippet from search results
+      "No description available.",                   // Fallback: Always a string for your UI
+    coverUrl: item.volumeInfo.imageLinks?.thumbnail || "https://placehold.co/100x150", 
+    previewLink: item.volumeInfo.previewLink,        // Optional
+
+    // User-specific fields (not in Google API, set in your app)
+    readingStatus: undefined,  // Set by user; initial value is undefined
+    dateAdded: undefined,      // Set when user adds book to their list
+    dateStarted: undefined,    // Set by user
+    dateFinished: undefined,   // Set by user
+    customShelves: undefined,  // Set by user (e.g. tags, folders, etc.)
+  };
+};
+
 
 /** Searches books by query using Google Books API */
 export const searchBooks = async (query: string): Promise<Book[]> => {

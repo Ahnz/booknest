@@ -27,21 +27,25 @@ function isValidBook(book: Book): boolean {
     typeof book.isbn13 === "string" &&
     book.isbn13.trim() !== "" &&
     typeof book.title === "string" &&
-    typeof book.author === "string"
+    book.title.trim() !== "" &&
+    Array.isArray(book.authors) &&
+    book.authors.length > 0 &&
+    book.authors.every((a) => typeof a === "string" && a.trim() !== "")
   );
 }
+
 
 // Compares two books to determine if they differ (excluding isbn13)
 function booksDiffer(book1: Book, book2: Book): boolean {
   return (
     book1.title !== book2.title ||
-    book1.author !== book2.author ||
+    book1.authors !== book2.authors ||
     book1.categories !== book2.categories ||
-    book1.cover_url !== book2.cover_url ||
-    book1.date_added !== book2.date_added ||
+    book1.coverUrl !== book2.coverUrl ||
+    book1.dateAdded !== book2.dateAdded ||
     book1.description !== book2.description ||
-    book1.published_year !== book2.published_year ||
-    book1.reading_status !== book2.reading_status
+    book1.publishedDate !== book2.publishedDate ||
+    book1.readingStatus !== book2.readingStatus
   );
 }
 
