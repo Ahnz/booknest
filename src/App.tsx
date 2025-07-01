@@ -13,6 +13,8 @@ import {
   MdStarRate,
   MdOutlineFavorite,
   MdOutlineStar,
+  MdQrCodeScanner,
+  MdOutlineDocumentScanner,
 } from "react-icons/md";
 import BookListPage from "./pages/BookListPage";
 import SearchPage from "./pages/SearchPage";
@@ -33,16 +35,10 @@ interface Tab {
 // Centralized tab configuration
 const tabs: Tab[] = [
   {
-    id: "my_books",
-    title: "My Books",
+    id: "home",
+    title: "Home",
     icon: MdHomeFilled,
     component: <BookListPage />,
-  },
-  {
-    id: "search",
-    title: "Search",
-    icon: MdSearch,
-    component: <SearchPage />,
   },
   {
     id: "favorites",
@@ -51,8 +47,14 @@ const tabs: Tab[] = [
     component: <DummyPage title="Favorites" />,
   },
   {
-    id: "statistics",
-    title: "Statistics",
+    id: "scanner",
+    title: "",
+    icon: MdOutlineDocumentScanner,
+    component: <SearchPage />,
+  },
+  {
+    id: "dashboard",
+    title: "Dashboard",
     icon: MdBarChart,
     component: <DummyPage title="Statistics" />,
   },
@@ -77,6 +79,7 @@ const AppComponent: React.FC = () => {
               <div
                 key={tab.id}
                 style={{ display: activeTab === tab.id ? "block" : "none" }}
+                className="overflow-visible"
               >
                 {tab.component}
               </div>
