@@ -67,7 +67,7 @@ const tabs: Tab[] = [
 ];
 
 const AppComponent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("my_books");
+  const [activeTab, setActiveTab] = useState<string>("home");
 
   return (
     <App theme="ios" dark={false}>

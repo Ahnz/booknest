@@ -18,12 +18,7 @@ const TabBar: React.FC<TabBarProps> = ({ tabs, activeTab, onTabChange }) => {
   const isIcons: boolean = true;
 
   return (
-    <Tabbar
-      labels={isLabels}
-      icons={isIcons}
-      className="left-0 bottom-0 fixed"
-      innerClassName="overflow-visible"
-    >
+    <Tabbar labels={isLabels} icons={isIcons} className="left-0 bottom-0 fixed" innerClassName="overflow-visible">
       {tabs.map((tab, index) => {
         const isScannerTab = tab.id === "scanner";
         return (
