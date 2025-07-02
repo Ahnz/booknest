@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  BarcodeScanner,
-  DetectedBarcode,
-  useTorch,
-} from "react-barcode-scanner";
+import { BarcodeScanner, DetectedBarcode, useTorch } from "react-barcode-scanner";
 import "react-barcode-scanner/polyfill";
 
 // Props for ISBNScanner component
@@ -23,20 +19,18 @@ const ISBNScanner: React.FC<ISBNScannerProps> = ({ onDetected }) => {
   };
 
   return (
-    <div style={{ width: "100%", height: "360px", position: "relative" }}>
+    <div style={{ width: "100%", height: "100%" }}>
       {/* Barcode scanner video feed */}
       <BarcodeScanner
         options={{
           formats: ["ean_13", "upc_a"], // Support ISBN-13 and ISBN-10
-          delay: 800, // Scan interval
+          delay: 550, // Scan interval
         }}
         onCapture={handleCapture}
       />
       {/* Torch toggle button */}
       {isTorchSupported && (
-        <button onClick={() => setIsTorchOn(!isTorchOn)}>
-          {isTorchOn ? "Torch Off" : "Torch On"}
-        </button>
+        <button onClick={() => setIsTorchOn(!isTorchOn)}>{isTorchOn ? "Torch Off" : "Torch On"}</button>
       )}
     </div>
   );
