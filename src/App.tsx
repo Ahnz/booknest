@@ -42,7 +42,7 @@ const tabs: Tab[] = [
   },
   {
     id: "favorites",
-    title: "Favorites",
+    title: "Wishlist",
     icon: MdOutlineStar,
     component: <DummyPage title="Favorites" />,
   },

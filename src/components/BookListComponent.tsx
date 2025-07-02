@@ -17,9 +17,9 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
   emptyText,
   emptyNode,
 }) => (
-  <List strongIos outlineIos>
+  <List margin="m-0">
     {books.length === 0 ? (
-      <Block strong inset className="text-center">
+      <Block inset className="text-center">
         {emptyNode ? (
           emptyNode
         ) : (
@@ -38,19 +38,20 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
 
         const { badgeText, badgeColor } = (() => {
           switch (book.readingStatus) {
-            case ReadingStatus.WantToRead:
-              return { badgeText: "W", badgeColor: "bg-amber-400" };
+            case ReadingStatus.Unread:
+              return { badgeText: "U", badgeColor: "bg-amber-400" };
             case ReadingStatus.Reading:
-              return { badgeText: "R", badgeColor: "bg-teal-500" };
+              return { badgeText: "L", badgeColor: "bg-teal-500" };
             case ReadingStatus.Finished:
               return { badgeText: "F", badgeColor: "bg-indigo-500" };
             case ReadingStatus.Abandoned:
               return { badgeText: "A", badgeColor: "bg-rose-400" };
+            case ReadingStatus.Wishlist:
+              return { badgeText: "W", badgeColor: "bg-purple-400" };
             default:
               return { badgeText: "", badgeColor: "" };
           }
         })();
-
         return (
           <ListItem
             key={book.isbn13}

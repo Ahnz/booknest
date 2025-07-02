@@ -9,9 +9,7 @@ import { BookListComponent } from "@/components/BookListComponent";
 const SearchPage: React.FC = () => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Book[] | undefined>(
-    undefined
-  );
+  const [searchResults, setSearchResults] = useState<Book[] | undefined>(undefined);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -36,7 +34,7 @@ const SearchPage: React.FC = () => {
     }
     const newBook: Book = {
       ...book,
-      readingStatus: ReadingStatus.WantToRead,
+      readingStatus: ReadingStatus.Unread,
       dateAdded: new Date().toISOString().split("T")[0],
     };
     setBooks([...books, newBook]);
