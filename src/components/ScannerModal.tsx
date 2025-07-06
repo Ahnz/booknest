@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Card, Segmented, SegmentedButton } from "konsta/react";
+import { Segmented, SegmentedButton, Link, Navbar, Page } from "konsta/react";
 import ISBNScanner from "./ISBNScanner";
 import { BookListComponent } from "./BookListComponent";
 import { Book, ReadingStatus } from "../types/Book";
+import { ScannerFrame } from "./ScannerFrame";
+import { Card } from "konsta/react";
 
 const dummyBook: Book = {
   isbn13: "9783426510179",
@@ -16,16 +18,16 @@ const dummyBook: Book = {
 
 type Mode = "read" | "wishlist";
 
-const MySegmentedControl: React.FC<{ mode: Mode; onChange: (mode: Mode) => void; className?: string }> = ({
-  mode,
-  onChange,
-  className = "",
-}) => (
-  <Segmented strong className={className}>
-    <SegmentedButton strong active={mode === "read"} onClick={() => onChange("read")}>
+const MySegmentedControl: React.FC<{
+  mode: Mode;
+  onChange: (mode: Mode) => void;
+  className?: string;
+}> = ({ mode, onChange, className = "" }) => (
+  <Segmented strong={true} className={`${className} w-full max-w-xs mx-auto`}>
+    <SegmentedButton active={mode === "read"} onClick={() => onChange("read")}>
       Gelesen
     </SegmentedButton>
-    <SegmentedButton strong active={mode === "wishlist"} onClick={() => onChange("wishlist")}>
+    <SegmentedButton active={mode === "wishlist"} onClick={() => onChange("wishlist")}>
       Wunschliste
     </SegmentedButton>
   </Segmented>
@@ -45,66 +47,45 @@ export default function ScannerModal({ onClose }: { onClose?: () => void }) {
     : undefined;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black">
-      {/* Scanner & Mask im Hintergrund */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <ISBNScanner onDetected={setIsbnResult} />
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-0 right-0 top-0 h-[calc(50%-80px)] bg-black/70" />
-          <div className="absolute left-0 right-0 bottom-0 h-[calc(50%-80px)] bg-black/70" />
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 h-[160px] w-[5vw] bg-black/70" />
-          <div className="absolute top-1/2 right-0 -translate-y-1/2 h-[160px] w-[5vw] bg-black/70" />
-          <div
-            className="absolute left-1/2 top-1/2 w-[90vw] max-w-lg h-[160px] -translate-x-1/2 -translate-y-1/2 border-4 border-white rounded-xl"
-            style={{ boxSizing: "border-box" }}
-          />
-        </div>
-      </div>
+    <Page role="dialog" aria-modal="true" className="fixed inset-0 z-[9999]  flex flex-col" tabIndex={-1}>
+      <Navbar
+        translucent={false}
+        large={scannedBook}
+        left={
+          <Link navbar onClick={onClose ?? (() => window.history.back())} className="font-semibold">
+            Zurück
+          </Link>
+        }
+        right={
+          <Link navbar onClick={() => setTorch((v) => !v)} className="font-semibold">
+            {torch ? "Blitz an" : "Blitz aus"}
+          </Link>
+        }
+        subnavbar={
+          scannedBook && (
+            <div className="w-full max-w-lg mx-auto p-12">
+              <BookListComponent books={[scannedBook]} emptyText="Kein Buch gefunden" onListItemAction={() => {}} />
+            </div>
+          )
+        }
+        subnavbarClassName=" border-b border-gray-200 !pl-0 !pr-0 -mt-16 p-16 mx-auto"
+        className="shadow-md"
+      />
 
-      {/* Blitz & Exit-Buttons */}
-      <button
-        onClick={() => setTorch((v) => !v)}
-        aria-label="Taschenlampe umschalten"
-        className={`fixed top-4 left-4 z-[11000] bg-white/90 hover:bg-white p-2 rounded-full shadow transition ${
-          torch ? "ring-2 ring-yellow-400" : ""
-        }`}
-      >
-        <span className={`text-xl ${torch ? "text-yellow-500" : "text-gray-400"}`}>⚡</span>
-      </button>
-      <button
-        onClick={onClose ? onClose : () => window.history.back()}
-        aria-label="Scanner schließen"
-        className="fixed top-4 right-4 z-[11000] bg-white/90 hover:bg-white p-2 rounded-full shadow transition"
-      >
-        <span className="text-xl font-bold text-gray-800">&times;</span>
-      </button>
+      {/* Scanner video & masking frame */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <ISBNScanner onDetected={setIsbnResult} torch={torch} />
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {/* Scanner frame */}
+          <ScannerFrame width={320} height={180} edgeLength={32} edgeThickness={4} borderRadius={18} />
 
-      {/* Zentrierter Dialog-Bereich (BookCard + Frame) */}
-      <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center z-[10001] pointer-events-none">
-        <div className="w-[92vw] max-w-lg mx-auto pointer-events-auto">
-          <Card className="relative py-3 px-2 transition-all duration-300 min-h-[20px]">
-            {!scannedBook ? (
-              <>
-                <div className="text-center font-normal text-gray-700 text-base mb-2">Ziel für den Scan auswählen</div>
-                <MySegmentedControl mode={mode} onChange={setMode} />
-              </>
-            ) : (
-              <>
-                <div className="absolute top-2 right-4 text-green-600 font-semibold text-sm">
-                  {mode === "read" ? "Als gelesen hinzugefügt" : "Zur Wunschliste hinzugefügt"}
-                </div>
-                <BookListComponent books={[scannedBook]} emptyText="Kein Buch gefunden" onListItemAction={() => {}} />
-                <MySegmentedControl mode={mode} onChange={setMode} className="mt-3" />
-              </>
-            )}
-          </Card>
-        </div>
-        {/* Dummy-Frame darunter */}
-        <div className="relative w-[90vw] max-w-lg h-[160px] mt-8 flex items-center justify-center pointer-events-none">
-          <div
-            className="absolute left-1/2 top-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 border-4 border-transparent rounded-xl"
-            style={{ boxSizing: "border-box" }}
-          />
+          {/* Panel: instruction text + segmented control */}
+          <div className=" max-w-md w-[95vw] mt-2   pointer-events-auto">
+            <div className="text-center font-normal text-gray-400 text-base mb-2 drop-shadow">
+              Ziel für den Scan auswählen
+            </div>
+            <MySegmentedControl mode={mode} onChange={setMode} />
+          </div>
         </div>
       </div>
 
@@ -130,6 +111,6 @@ export default function ScannerModal({ onClose }: { onClose?: () => void }) {
           </button>
         </Card>
       </div>
-    </div>
+    </Page>
   );
 }
