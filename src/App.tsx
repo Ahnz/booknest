@@ -1,39 +1,23 @@
 import { useState, lazy, Suspense } from "react";
-import { App } from "konsta/react";
+import { App, Page, Navbar } from "konsta/react";
 import TabBar from "./components/TabBar";
 import { DummyPage } from "./pages/DummyPage";
-import { IconType } from "react-icons";
 import {
   MdMenuBook,
   MdFavorite,
-  MdSearch,
   MdBarChart,
   MdSettings,
   MdHomeFilled,
-  MdStarRate,
-  MdOutlineFavorite,
   MdOutlineStar,
-  MdQrCodeScanner,
   MdOutlineDocumentScanner,
 } from "react-icons/md";
 import BookListPage from "./pages/BookListPage";
-import SearchPage from "./pages/SearchPage";
 import { BooksProvider } from "./context/BooksContext";
-import { Navbar } from "konsta/react";
-import { Page } from "konsta/react";
+import ScannerPage from "./pages/ScannerPage";
 
-// Lazy load BookList
 const BookList = lazy(() => import("./pages/BookListPage"));
 
-interface Tab {
-  id: string;
-  title: string;
-  icon: IconType;
-  component: React.ReactNode;
-}
-
-// Centralized tab configuration
-const tabs: Tab[] = [
+const tabs = [
   {
     id: "home",
     title: "Home",
@@ -48,9 +32,8 @@ const tabs: Tab[] = [
   },
   {
     id: "scanner",
-    title: "",
+    title: "Scanner",
     icon: MdOutlineDocumentScanner,
-    component: <SearchPage />,
   },
   {
     id: "dashboard",
@@ -68,26 +51,57 @@ const tabs: Tab[] = [
 
 const AppComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("home");
+  const [showScanner, setShowScanner] = useState(false);
+  const [previousTab, setPreviousTab] = useState<string>("home");
+
+  const handleTabChange = (tabId: string) => {
+    // Remember last tab and open scanner
+    if (tabId === "scanner") {
+      setPreviousTab(activeTab);
+      setShowScanner(true);
+    } else {
+      setActiveTab(tabId);
+    }
+  };
+
+  const handleCloseScanner = () => {
+    setShowScanner(false);
+    setActiveTab(previousTab);
+  };
 
   return (
     <App theme="ios" dark={false}>
-      <Page>
-        <Navbar title={activeTab} transparent large />
-        <Suspense fallback={<div>Loading...</div>}>
-          <BooksProvider>
-            {tabs.map((tab) => (
-              <div
-                key={tab.id}
-                style={{ display: activeTab === tab.id ? "block" : "none" }}
-                className="overflow-visible"
-              >
-                {tab.component}
-              </div>
-            ))}
-          </BooksProvider>
-        </Suspense>
-      </Page>
-      <TabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <BooksProvider>
+        {showScanner ? (
+          <ScannerPage onClose={handleCloseScanner} />
+        ) : (
+          <>
+            <Page>
+              <Navbar title={activeTab} transparent large />
+              <Suspense fallback={<div>Loading...</div>}>
+                {tabs
+                  .filter((tab) => tab.id !== "scanner")
+                  .map((tab) => (
+                    <div
+                      key={tab.id}
+                      style={{
+                        display: activeTab === tab.id ? "block" : "none",
+                      }}
+                      className="overflow-visible"
+                    >
+                      {tab.component}
+                    </div>
+                  ))}
+              </Suspense>
+            </Page>
+            <TabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </>
+        )}
+      </BooksProvider>
     </App>
   );
 };

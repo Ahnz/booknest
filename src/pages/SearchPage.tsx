@@ -3,13 +3,15 @@ import { Page } from "konsta/react";
 import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
 import { searchBooks, searchByISBN } from "../services/GoogleBooksAPI";
-import ScannerModal from "@/components/ScannerModal";
+import ScannerPage from "@/pages/ScannerPage";
 import { BookListComponent } from "@/components/BookListComponent";
 
 const SearchPage: React.FC = () => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Book[] | undefined>(undefined);
+  const [searchResults, setSearchResults] = useState<Book[] | undefined>(
+    undefined
+  );
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -58,7 +60,7 @@ const SearchPage: React.FC = () => {
         <button onClick={() => setScannerOpen(true)} type="button">
           Scan Books
         </button>
-        {scannerOpen && <ScannerModal onClose={() => setScannerOpen(false)} />}
+        {scannerOpen && <ScannerPage onClose={() => setScannerOpen(false)} />}
       </div>
 
       {/* Error handling */}

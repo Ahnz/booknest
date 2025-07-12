@@ -7,15 +7,15 @@ import {
   SegmentedButton,
   Card,
 } from "konsta/react";
-import ISBNScanner from "./ISBNScanner";
-import { BookListComponent } from "./BookListComponent";
-import { Book, ReadingStatus } from "./../types/Book";
-import { ScannerFrame } from "./ScannerFrame";
+import ISBNScanner from "../components/ISBNScanner";
+import { BookListComponent } from "../components/BookListComponent";
+import { Book, ReadingStatus } from "../types/Book";
+import { ScannerFrame } from "../components/ScannerFrame";
 import { searchByISBN } from "@/services/GoogleBooksAPI";
 
 type Mode = "read" | "wishlist";
 
-export default function ScannerModal({ onClose }: { onClose?: () => void }) {
+export default function ScannerPage({ onClose }: { onClose?: () => void }) {
   const [mode, setMode] = useState<Mode>("wishlist");
   const [scannedBook, setScannedBook] = useState<Book | null>(null);
   const [torch, setTorch] = useState(false);
@@ -65,12 +65,8 @@ export default function ScannerModal({ onClose }: { onClose?: () => void }) {
         translucent={false}
         large={!!scannedBook}
         left={
-          <Link
-            navbar
-            onClick={onClose ?? (() => window.history.back())}
-            className="font-semibold"
-          >
-            Zurück
+          <Link navbar onClick={onClose} className="font-semibold">
+            Schließen
           </Link>
         }
         right={
