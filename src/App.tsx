@@ -12,7 +12,6 @@ import {
 import BookListPage from "./pages/BookListPage";
 import { BooksProvider } from "./context/BooksContext";
 import ModalPage from "./pages/ModalPage";
-const BookList = lazy(() => import("./pages/BookListPage"));
 
 const tabs = [
   {
