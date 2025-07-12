@@ -24,17 +24,26 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
           emptyNode
         ) : (
           <div className="flex flex-col items-center gap-4">
-            {emptyImage && <img src={emptyImage} alt="No items" className="max-w-[80%] mx-auto" />}
+            {emptyImage && (
+              <img
+                src={emptyImage}
+                alt="No items"
+                className="max-w-[80%] mx-auto"
+              />
+            )}
             <p className="text-gray-600">{emptyText}</p>
           </div>
         )}
       </Block>
     ) : (
       books.map((book) => {
-        const publishYear = book.publishedDate ? book.publishedDate.split("-")[0] : "Unknown";
-        const footerParts = [publishYear, book.categories?.length ? book.categories.join(", ") : "No Category"].filter(
-          Boolean
-        );
+        const publishYear = book.publishedDate
+          ? book.publishedDate.split("-")[0]
+          : "Unknown";
+        const footerParts = [
+          publishYear,
+          book.categories?.length ? book.categories.join(", ") : "No Category",
+        ].filter(Boolean);
 
         const { badgeText, badgeColor } = (() => {
           switch (book.readingStatus) {
@@ -56,10 +65,12 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
           <ListItem
             key={book.isbn13}
             link
-            chevron={false}
-            chevronMaterial={false}
             title={book.title}
-            subtitle={book.authors?.length ? `by ${book.authors.join(", ")}` : "by Unknown Author"}
+            subtitle={
+              book.authors?.length
+                ? `by ${book.authors.join(", ")}`
+                : "by Unknown Author"
+            }
             footer={footerParts.join(" • ")}
             media={
               <div className="relative">
