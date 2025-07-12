@@ -17,7 +17,7 @@ export default function ModalPage({ onClose }: ModalPageProps) {
       {mode === "scanner" && (
         <ScannerPage onClose={onClose} onGoToSearch={() => setMode("search")} />
       )}
-      {mode === "search" && <SearchPage />}
+      {mode === "search" && <SearchPage onClose={onClose} />}
     </Page>
   );
 }

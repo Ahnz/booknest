@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { Page } from "konsta/react";
+import { Navbar, Link, Searchbar } from "konsta/react";
 import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
-import { searchBooks, searchByISBN } from "../services/GoogleBooksAPI";
-import ScannerPage from "@/pages/ScannerPage";
+import { searchBooks } from "../services/GoogleBooksAPI";
 import { BookListComponent } from "@/components/BookListComponent";
+import startSearch from "../assets/startSearch.png";
+import { Page } from "konsta/react";
 
-const SearchPage: React.FC = () => {
+interface SearchPageProps {
+  onClose: () => void;
+}
+
+const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Book[] | undefined>(
@@ -14,20 +19,6 @@ const SearchPage: React.FC = () => {
   );
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scannerOpen, setScannerOpen] = useState(false);
-
-  const handleTextSearch = async () => {
-    setIsSearching(true);
-    setError(null);
-    try {
-      const results = await searchBooks(searchQuery);
-      setSearchResults(results);
-    } catch (error: any) {
-      setError(error.message);
-      setSearchResults([]);
-    }
-    setIsSearching(false);
-  };
 
   const handleAddBook = (book: Book) => {
     if (books.some((b) => b.isbn13 === book.isbn13)) {
@@ -42,45 +33,78 @@ const SearchPage: React.FC = () => {
     setBooks([...books, newBook]);
   };
 
+  const handleTextSearch = async () => {
+    if (!searchQuery) {
+      setSearchResults(undefined);
+      setError(null);
+      return;
+    }
+    setIsSearching(true);
+    setError(null);
+    try {
+      const results = await searchBooks(searchQuery);
+      setSearchResults(results);
+    } catch (error: any) {
+      setError(error.message || "Failed to search");
+      setSearchResults([]);
+    }
+    setIsSearching(false);
+  };
+
+  const handleClear = () => {
+    setSearchQuery("");
+    setSearchResults(undefined);
+    setError(null);
+  };
+
   return (
-    <div>
-      {/* Search */}
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search by title, author..."
-      />
-      <button onClick={handleTextSearch} disabled={isSearching || isLoading}>
-        {isSearching ? "Searching..." : "Search"}
-      </button>
-
-      {/* Scanner */}
-      <div>
-        <button onClick={() => setScannerOpen(true)} type="button">
-          Scan Books
-        </button>
-        {scannerOpen && <ScannerPage onClose={() => setScannerOpen(false)} />}
-      </div>
-
-      {/* Error handling */}
-      {(error || dbError) && <p>{error || dbError}</p>}
-
-      {/* Book list */}
-      <BookListComponent
-        onListItemAction={handleAddBook}
-        books={searchResults ?? []}
-        emptyText={
-          isSearching
-            ? "Searching..."
-            : searchResults === undefined
-            ? "Enter a query and search for books!"
-            : searchResults.length === 0 && !isSearching && !error && !dbError
-            ? "No books found"
-            : undefined
+    <Page className="flex flex-col min-h-screen">
+      <Navbar
+        title="Bücher suchen"
+        translucent
+        outline={true}
+        right={
+          <Link navbar onClick={onClose}>
+            Close
+          </Link>
+        }
+        subnavbar={
+          <Searchbar
+            value={searchQuery}
+            onInput={(e) => setSearchQuery(e.target.value)}
+            onClear={handleClear}
+            placeholder="Titel, Autor..."
+            // Use disableButton as search trigger
+            disableButton
+            disableButtonText="Suchen"
+            onDisable={handleTextSearch}
+          />
         }
       />
-    </div>
+
+      {/* Error message */}
+      {(error || dbError) && (
+        <p className="text-red-500 px-4">{error || dbError}</p>
+      )}
+
+      {/* Book List with empty state */}
+      <div className="flex-1 px-2 pb-4">
+        <BookListComponent
+          onListItemAction={handleAddBook}
+          books={searchResults ?? []}
+          emptyText={
+            isSearching
+              ? "Suche läuft..."
+              : searchResults === undefined
+              ? "Starte eine Suche, um Bücher zu deiner Sammlung hinzuzufügen."
+              : searchResults.length === 0
+              ? "Keine Bücher gefunden."
+              : undefined
+          }
+          emptyImage={startSearch}
+        />
+      </div>
+    </Page>
   );
 };
 
