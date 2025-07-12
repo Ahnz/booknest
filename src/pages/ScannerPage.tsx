@@ -15,7 +15,15 @@ import { searchByISBN } from "@/services/GoogleBooksAPI";
 
 type Mode = "read" | "wishlist";
 
-export default function ScannerPage({ onClose }: { onClose?: () => void }) {
+interface ScannerPageProps {
+  onClose?: () => void;
+  onGoToSearch?: () => void;
+}
+
+export default function ScannerPage({
+  onClose,
+  onGoToSearch,
+}: ScannerPageProps) {
   const [mode, setMode] = useState<Mode>("wishlist");
   const [scannedBook, setScannedBook] = useState<Book | null>(null);
   const [torch, setTorch] = useState(false);
@@ -139,6 +147,7 @@ export default function ScannerPage({ onClose }: { onClose?: () => void }) {
         </div>
         <Card className="p-0">
           <button
+            onClick={onGoToSearch}
             className="w-full flex flex-col items-center justify-center py-2 bg-transparent rounded text-sm font-semibold text-gray-700 hover:bg-gray-100 transition"
             style={{ lineHeight: 1.2 }}
           >

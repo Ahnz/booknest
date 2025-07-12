@@ -3,8 +3,6 @@ import { App, Page, Navbar } from "konsta/react";
 import TabBar from "./components/TabBar";
 import { DummyPage } from "./pages/DummyPage";
 import {
-  MdMenuBook,
-  MdFavorite,
   MdBarChart,
   MdSettings,
   MdHomeFilled,
@@ -13,8 +11,7 @@ import {
 } from "react-icons/md";
 import BookListPage from "./pages/BookListPage";
 import { BooksProvider } from "./context/BooksContext";
-import ScannerPage from "./pages/ScannerPage";
-
+import ModalPage from "./pages/ModalPage";
 const BookList = lazy(() => import("./pages/BookListPage"));
 
 const tabs = [
@@ -32,7 +29,7 @@ const tabs = [
   },
   {
     id: "scanner",
-    title: "Scanner",
+    title: "",
     icon: MdOutlineDocumentScanner,
   },
   {
@@ -51,29 +48,28 @@ const tabs = [
 
 const AppComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("home");
-  const [showScanner, setShowScanner] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [previousTab, setPreviousTab] = useState<string>("home");
 
   const handleTabChange = (tabId: string) => {
-    // Remember last tab and open scanner
     if (tabId === "scanner") {
       setPreviousTab(activeTab);
-      setShowScanner(true);
+      setModalOpen(true);
     } else {
       setActiveTab(tabId);
     }
   };
 
-  const handleCloseScanner = () => {
-    setShowScanner(false);
+  const handleCloseModal = () => {
+    setModalOpen(false);
     setActiveTab(previousTab);
   };
 
   return (
     <App theme="ios" dark={false}>
       <BooksProvider>
-        {showScanner ? (
-          <ScannerPage onClose={handleCloseScanner} />
+        {modalOpen ? (
+          <ModalPage onClose={handleCloseModal} />
         ) : (
           <>
             <Page>
