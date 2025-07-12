@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import {
   BarcodeScanner,
   DetectedBarcode,
@@ -6,17 +6,22 @@ import {
 } from "react-barcode-scanner";
 import "react-barcode-scanner/polyfill";
 
-// Props for ISBNScanner component
 interface ISBNScannerProps {
   onDetected: (isbn: string) => void;
+  torch?: boolean;
 }
 
-// ISBN scanner with torch support
-const ISBNScanner: React.FC<ISBNScannerProps> = ({ onDetected }) => {
+const ISBNScanner: React.FC<ISBNScannerProps> = ({ onDetected, torch }) => {
   // Store the last scanned barcode to prevent duplicate calls
   const lastScannedBarcodeRef = useRef<string | null>(null);
+  const { isTorchSupported, error, isTorchOn, setIsTorchOn } = useTorch(false);
 
-  // Handle barcode detection
+  useEffect(() => {
+    if (isTorchSupported) {
+      setIsTorchOn(!!torch);
+    }
+  }, [torch, isTorchSupported, setIsTorchOn]);
+
   const handleCapture = useCallback(
     (barcodes: DetectedBarcode[]) => {
       if (barcodes.length > 0) {
