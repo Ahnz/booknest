@@ -15,15 +15,14 @@ export default function BookListPage() {
     <>
       <BookListComponent
         books={books}
-        onListItemAction={(book) => setSelectedBook(book)} // ← Dialog hier öffnen!
+        onListItemAction={(book) => setSelectedBook(book)}
         emptyImage={welcomeBookshelfImage}
         emptyText="Start searching for books to add to your collection"
       />
 
-      {/* Dialog-Komponente öffnet sich automatisch, sobald selectedBook gesetzt ist */}
       <BookDetailPage
         book={selectedBook}
-        onClose={() => setSelectedBook(null)} // ← Dialog schließen
+        onClose={() => setSelectedBook(null)}
       />
     </>
   );
