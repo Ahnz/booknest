@@ -6,10 +6,13 @@ import { Book } from "../types/Book";
 import BookDetailPage from "./BookDetailPage";
 
 export default function BookListPage() {
-  const { books, isLoading, error } = useBooksContext();
-
-  // Hier speicherst du das Buch, das angeklickt wurde (null bedeutet "kein Dialog")
+  const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+
+  // Funktion zum Speichern eines aktualisierten Buches
+  const handleSave = (updatedBook: Book) => {
+    setBooks((prevBooks) => prevBooks.map((book) => (book.isbn13 === updatedBook.isbn13 ? updatedBook : book)));
+  };
 
   return (
     <>
@@ -20,10 +23,7 @@ export default function BookListPage() {
         emptyText="Start searching for books to add to your collection"
       />
 
-      <BookDetailPage
-        book={selectedBook}
-        onClose={() => setSelectedBook(null)}
-      />
+      <BookDetailPage book={selectedBook} onClose={() => setSelectedBook(null)} onSave={handleSave} />
     </>
   );
 }
