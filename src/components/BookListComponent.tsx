@@ -1,6 +1,7 @@
 import React from "react";
-import { Book, ReadingStatus } from "../types/Book";
 import { List, ListItem, Block, Badge } from "konsta/react";
+import { Book, ReadingStatus } from "../types/Book";
+import { getReadingStatusStyle } from "../utils/readingStatusStyles";
 
 type BookListComponentProps = {
   books: Book[];
@@ -24,53 +25,26 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
           emptyNode
         ) : (
           <div className="flex flex-col items-center gap-4">
-            {emptyImage && (
-              <img
-                src={emptyImage}
-                alt="No items"
-                className="max-w-[80%] mx-auto"
-              />
-            )}
+            {emptyImage && <img src={emptyImage} alt="No items" className="max-w-[80%] mx-auto" />}
             <p className="text-gray-600">{emptyText}</p>
           </div>
         )}
       </Block>
     ) : (
       books.map((book) => {
-        const publishYear = book.publishedDate
-          ? book.publishedDate.split("-")[0]
-          : "Unknown";
-        const footerParts = [
-          publishYear,
-          book.categories?.length ? book.categories.join(", ") : "No Category",
-        ].filter(Boolean);
+        const publishYear = book.publishedDate ? book.publishedDate.split("-")[0] : "Unknown";
+        const footerParts = [publishYear, book.categories?.length ? book.categories.join(", ") : "No Category"].filter(
+          Boolean
+        );
 
-        const { badgeText, badgeColor } = (() => {
-          switch (book.readingStatus) {
-            case ReadingStatus.Unread:
-              return { badgeText: "U", badgeColor: "bg-amber-400" };
-            case ReadingStatus.Reading:
-              return { badgeText: "L", badgeColor: "bg-teal-500" };
-            case ReadingStatus.Finished:
-              return { badgeText: "F", badgeColor: "bg-indigo-500" };
-            case ReadingStatus.Abandoned:
-              return { badgeText: "A", badgeColor: "bg-rose-400" };
-            case ReadingStatus.Wishlist:
-              return { badgeText: "W", badgeColor: "bg-purple-400" };
-            default:
-              return { badgeText: "", badgeColor: "" };
-          }
-        })();
+        const { badgeText, badgeColor, fillText } = getReadingStatusStyle(book.readingStatus);
+
         return (
           <ListItem
             key={book.isbn13}
             link
             title={book.title}
-            subtitle={
-              book.authors?.length
-                ? `by ${book.authors.join(", ")}`
-                : "by Unknown Author"
-            }
+            subtitle={book.authors?.length ? `by ${book.authors.join(", ")}` : "by Unknown Author"}
             footer={footerParts.join(" • ")}
             media={
               <div className="relative">
@@ -84,7 +58,7 @@ export const BookListComponent: React.FC<BookListComponentProps> = ({
                 />
                 {badgeText && (
                   <div className="absolute bottom-[-6px] right-[-6px]">
-                    <Badge colors={{ bg: badgeColor }}>{badgeText}</Badge>
+                    <Badge colors={{ bg: badgeColor, fillText }}>{badgeText}</Badge>
                   </div>
                 )}
               </div>
