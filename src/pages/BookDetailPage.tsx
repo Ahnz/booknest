@@ -8,25 +8,26 @@ import { UserInfoSection } from "../components/sections/UserInfoSection";
 import { DescriptionSection } from "../components/sections/DescriptionSection";
 import { DetailsSection } from "../components/sections/DetailsSection";
 
+// Typendefinition für Props
 interface BookDetailDialogProps {
-  book: Book | null;
+  book: Book;
   onClose: () => void;
   onSave: (updated: Book) => void;
 }
 
 export const BookDetailPage: React.FC<BookDetailDialogProps> = ({ book, onClose, onSave }) => {
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState<Book | null>(book);
+  const [form, setForm] = useState<Book>(book);
 
+  // Synchronisiere Formular mit neuem Buch
   useEffect(() => {
     setForm(book);
     setEditMode(false);
   }, [book]);
 
-  if (!book || !form) return <Block>No book selected.</Block>;
-
+  // Aktualisiere Formularfelder
   const updateForm = <K extends keyof Book>(field: K, value: Book[K]) =>
-    setForm((prev) => ({ ...prev!, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
 
   return (
     <Page className="fixed inset-0 z-50 overflow-auto">

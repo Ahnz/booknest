@@ -22,8 +22,7 @@ export default function BookListPage() {
         emptyImage={welcomeBookshelfImage}
         emptyText="Start searching for books to add to your collection"
       />
-
-      <BookDetailPage book={selectedBook} onClose={() => setSelectedBook(null)} onSave={handleSave} />
+      {selectedBook && <BookDetailPage book={selectedBook} onClose={() => setSelectedBook(null)} onSave={handleSave} />}
     </>
   );
 }
