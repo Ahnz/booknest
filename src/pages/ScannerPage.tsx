@@ -1,17 +1,12 @@
 import React, { useState, useCallback } from "react";
-import {
-  Link,
-  Navbar,
-  Page,
-  Segmented,
-  SegmentedButton,
-  Card,
-} from "konsta/react";
+import { Link, Navbar, Page, Segmented, SegmentedButton, Card } from "konsta/react";
 import ISBNScanner from "../components/ISBNScanner";
 import { BookListComponent } from "../components/BookListComponent";
 import { Book, ReadingStatus } from "../types/Book";
 import { ScannerFrame } from "../components/ScannerFrame";
 import { searchByISBN } from "@/services/GoogleBooksAPI";
+import { useBooksContext } from "../context/BooksContext";
+import ToastNotification from "../components/ToastNotification";
 
 type Mode = "read" | "wishlist";
 
@@ -20,55 +15,62 @@ interface ScannerPageProps {
   onGoToSearch?: () => void;
 }
 
-export default function ScannerPage({
-  onClose,
-  onGoToSearch,
-}: ScannerPageProps) {
+export default function ScannerPage({ onClose, onGoToSearch }: ScannerPageProps) {
+  const { books, setBooks } = useBooksContext();
   const [mode, setMode] = useState<Mode>("wishlist");
   const [scannedBook, setScannedBook] = useState<Book | null>(null);
   const [torch, setTorch] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toastOpened, setToastOpened] = useState(false);
 
-  const handleScan = useCallback(
-    async (isbn: string | null | undefined) => {
-      if (!isbn) {
-        setScannedBook(null);
-        return;
-      }
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setToastOpened(true);
+  };
 
-      try {
-        const books = await searchByISBN(isbn);
-        if (books.length > 0) {
-          const book = {
-            ...books[0],
-            readingStatus:
-              mode === "read" ? ReadingStatus.Finished : ReadingStatus.Wishlist,
-          };
-          setScannedBook(book);
-          setError(null);
-        } else {
-          setError("Kein Buch für diesen ISBN gefunden");
-          setScannedBook(null);
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Fehler beim Abrufen der Buchdaten"
-        );
+  const handleAddBook = useCallback(
+    (book: Book) => {
+      if (books.some((b) => b.isbn13 === book.isbn13)) {
+        showToast("Buch ist bereits in der Liste.", "error");
         setScannedBook(null);
+        return false;
       }
+      const newBook: Book = {
+        ...book,
+        readingStatus: mode === "read" ? ReadingStatus.Finished : ReadingStatus.Wishlist,
+        dateAdded: new Date().toISOString().split("T")[0],
+      };
+      setBooks([...books, newBook]);
+      showToast("Buch erfolgreich hinzugefügt!", "success");
+      setScannedBook(null);
+      return true;
     },
-    [mode]
+    [books, setBooks, mode]
   );
 
+  const handleScan = useCallback(async (isbn: string | null | undefined) => {
+    if (!isbn) {
+      setScannedBook(null);
+      return;
+    }
+
+    try {
+      const books = await searchByISBN(isbn);
+      if (books.length > 0) {
+        const book = books[0];
+        setScannedBook(book);
+      } else {
+        showToast("Kein Buch für diesen ISBN gefunden", "error");
+        setScannedBook(null);
+      }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Fehler beim Abrufen der Buchdaten", "error");
+      setScannedBook(null);
+    }
+  }, []);
+
   return (
-    <Page
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[9999] flex flex-col"
-      tabIndex={-1}
-    >
+    <Page role="dialog" aria-modal="true" className="fixed inset-0 z-[9999] flex flex-col" tabIndex={-1}>
       <Navbar
         translucent={false}
         large={!!scannedBook}
@@ -78,11 +80,7 @@ export default function ScannerPage({
           </Link>
         }
         right={
-          <Link
-            navbar
-            onClick={() => setTorch((v) => !v)}
-            className="font-semibold"
-          >
+          <Link navbar onClick={() => setTorch((v) => !v)} className="font-semibold">
             {torch ? "Blitz aus" : "Blitz an"}
           </Link>
         }
@@ -92,40 +90,26 @@ export default function ScannerPage({
               <BookListComponent
                 books={[scannedBook]}
                 emptyText="Kein Buch gefunden"
-                onListItemAction={() => {}}
+                onListItemAction={handleAddBook}
               />
             </div>
           )
         }
-        subnavbarClassName=" border-b border-gray-200 !pl-0 !pr-0 -mt-16 p-16 mx-auto"
+        subnavbarClassName="border-b border-gray-200 !pl-0 !pr-0 -mt-16 p-16 mx-auto"
         className="shadow-md"
       />
 
       <div className="absolute inset-0 pointer-events-none z-0">
         <ISBNScanner onDetected={handleScan} torch={torch} />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <ScannerFrame
-            width={320}
-            height={180}
-            edgeLength={32}
-            edgeThickness={4}
-            borderRadius={18}
-          />
+          <ScannerFrame width={320} height={180} edgeLength={32} edgeThickness={4} borderRadius={18} />
           <div className="max-w-md w-[95vw] mt-2 pointer-events-auto">
-            <div className="text-center text-gray-400 text-base mb-2 drop-shadow">
-              Ziel für den Scan auswählen
-            </div>
+            <div className="text-center text-gray-400 text-base mb-2 drop-shadow">Ziel für den Scan auswählen</div>
             <Segmented className="w-full max-w-xs mx-auto">
-              <SegmentedButton
-                active={mode === "read"}
-                onClick={() => setMode("read")}
-              >
+              <SegmentedButton active={mode === "read"} onClick={() => setMode("read")}>
                 Gelesen
               </SegmentedButton>
-              <SegmentedButton
-                active={mode === "wishlist"}
-                onClick={() => setMode("wishlist")}
-              >
+              <SegmentedButton active={mode === "wishlist"} onClick={() => setMode("wishlist")}>
                 Wunschliste
               </SegmentedButton>
             </Segmented>
@@ -133,10 +117,13 @@ export default function ScannerPage({
         </div>
       </div>
 
-      {error && (
-        <div className="fixed top-16 w-[92vw] max-w-lg mx-auto z-[10000] p-4 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
+      {toast && (
+        <ToastNotification
+          message={toast.message}
+          type={toast.type}
+          opened={toastOpened}
+          onClose={() => setToastOpened(false)}
+        />
       )}
 
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92vw] max-w-lg z-[10000]">
@@ -152,17 +139,11 @@ export default function ScannerPage({
             style={{ lineHeight: 1.2 }}
           >
             <div className="flex items-center gap-2 text-base">
-              <span className="font-normal text-gray-700">
-                Buch ohne ISBN hinzufügen?
-              </span>
+              <span className="font-normal text-gray-700">Buch ohne ISBN hinzufügen?</span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
-              <span className="font-bold text-blue-700 text-base">
-                Suche starten
-              </span>
-              <span className="ml-0.5 text-base text-blue-700 font-bold">
-                {"»"}
-              </span>
+              <span className="font-bold text-blue-700 text-base">Suche starten</span>
+              <span className="ml-0.5 text-base text-blue-700 font-bold">{"»"}</span>
             </div>
           </button>
         </Card>

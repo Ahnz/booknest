@@ -13,10 +13,8 @@ export default function ModalPage({ onClose }: ModalPageProps) {
   const [mode, setMode] = useState<ModalMode>("scanner");
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      {mode === "scanner" && (
-        <ScannerPage onClose={onClose} onGoToSearch={() => setMode("search")} />
-      )}
+    <div className="fixed inset-0 z-[10]">
+      {mode === "scanner" && <ScannerPage onClose={onClose} onGoToSearch={() => setMode("search")} />}
       {mode === "search" && <SearchPage onClose={onClose} />}
     </div>
   );

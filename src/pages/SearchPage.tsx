@@ -4,6 +4,7 @@ import { useBooksContext } from "../context/BooksContext";
 import { Book, ReadingStatus } from "../types/Book";
 import { searchBooks } from "../services/GoogleBooksAPI";
 import { BookListComponent } from "@/components/BookListComponent";
+import ToastNotification from "../components/ToastNotification";
 import startSearch from "../assets/startSearch.png";
 import { Page } from "konsta/react";
 
@@ -14,15 +15,19 @@ interface SearchPageProps {
 const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Book[] | undefined>(
-    undefined
-  );
+  const [searchResults, setSearchResults] = useState<Book[] | undefined>(undefined);
   const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toastOpened, setToastOpened] = useState(false);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setToastOpened(true);
+  };
 
   const handleAddBook = (book: Book) => {
     if (books.some((b) => b.isbn13 === book.isbn13)) {
-      setError("Book already in list.");
+      showToast("Buch ist bereits in der Liste.", "error");
       return;
     }
     const newBook: Book = {
@@ -31,21 +36,20 @@ const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
       dateAdded: new Date().toISOString().split("T")[0],
     };
     setBooks([...books, newBook]);
+    showToast("Buch erfolgreich hinzugefügt!", "success");
   };
 
   const handleTextSearch = async () => {
     if (!searchQuery) {
       setSearchResults(undefined);
-      setError(null);
       return;
     }
     setIsSearching(true);
-    setError(null);
     try {
       const results = await searchBooks(searchQuery);
       setSearchResults(results);
     } catch (error: any) {
-      setError(error.message || "Failed to search");
+      showToast(error.message || "Fehler bei der Suche", "error");
       setSearchResults([]);
     }
     setIsSearching(false);
@@ -54,7 +58,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
   const handleClear = () => {
     setSearchQuery("");
     setSearchResults(undefined);
-    setError(null);
+    setToast(null);
+    setToastOpened(false);
   };
 
   return (
@@ -65,7 +70,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
         outline={true}
         right={
           <Link navbar onClick={onClose}>
-            Close
+            Schließen
           </Link>
         }
         subnavbar={
@@ -74,7 +79,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
             onInput={(e) => setSearchQuery(e.target.value)}
             onClear={handleClear}
             placeholder="Titel, Autor..."
-            // Use disableButton as search trigger
             disableButton
             disableButtonText="Suchen"
             onDisable={handleTextSearch}
@@ -82,12 +86,17 @@ const SearchPage: React.FC<SearchPageProps> = ({ onClose }) => {
         }
       />
 
-      {/* Error message */}
-      {(error || dbError) && (
-        <p className="text-red-500 px-4">{error || dbError}</p>
+      {toast && (
+        <ToastNotification
+          message={toast.message}
+          type={toast.type}
+          opened={toastOpened}
+          onClose={() => setToastOpened(false)}
+        />
       )}
 
-      {/* Book List with empty state */}
+      {dbError && <ToastNotification message={dbError} type="error" opened={true} onClose={() => {}} />}
+
       <div className="flex-1 px-2 pb-4">
         <BookListComponent
           onListItemAction={handleAddBook}
