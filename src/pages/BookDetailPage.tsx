@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Page, Navbar, Block, Link } from "konsta/react";
-import { NavbarBackLink } from "konsta/react";
+import { Page, Navbar, NavbarBackLink, Block, Link } from "konsta/react";
 import { Book } from "../types/Book";
 import { BookHeader } from "../components/sections/BookHeaderSection";
 import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { UserInfoSection } from "../components/sections/UserInfoSection";
 import { DescriptionSection } from "../components/sections/DescriptionSection";
 import { DetailsSection } from "../components/sections/DetailsSection";
+import { ConfirmationDialog as DeleteBookDialog } from "@/components/ConfirmationDialog";
 
 // Typendefinition für Props
 interface BookDetailDialogProps {
   book: Book;
   onClose: () => void;
   onSave: (updated: Book) => void;
+  onDelete: (bookToDelete: Book) => void;
 }
 
-export const BookDetailPage: React.FC<BookDetailDialogProps> = ({ book, onClose, onSave }) => {
-  const [editMode, setEditMode] = useState(false);
+export const BookDetailPage: React.FC<BookDetailDialogProps> = ({ book, onClose, onSave, onDelete }) => {
   const [form, setForm] = useState<Book>(book);
+  const [editMode, setEditMode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Synchronisiere Formular mit neuem Buch
   useEffect(() => {
@@ -25,9 +27,12 @@ export const BookDetailPage: React.FC<BookDetailDialogProps> = ({ book, onClose,
     setEditMode(false);
   }, [book]);
 
-  // Aktualisiere Formularfelder
   const updateForm = <K extends keyof Book>(field: K, value: Book[K]) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+  const handleDelete = () => {
+    onDelete(book);
+    setShowDeleteConfirm(false);
+  };
 
   return (
     <Page className="fixed inset-0 z-50 overflow-auto">
@@ -85,13 +90,31 @@ export const BookDetailPage: React.FC<BookDetailDialogProps> = ({ book, onClose,
       {/* Details */}
       <DetailsSection book={form} editMode={editMode} onUpdate={updateForm} />
 
-      {/* Vorschau-Link */}
-      {form.previewLink && !editMode && (
+      {!editMode ? (
+        form.previewLink && (
+          <Block className="text-center mt-4">
+            <Link href={form.previewLink} external target="_blank">
+              Preview this book
+            </Link>
+          </Block>
+        )
+      ) : (
         <Block className="text-center mt-4">
-          <Link href={form.previewLink} external target="_blank">
-            Preview this book
-          </Link>
+          <Link onClick={() => setShowDeleteConfirm(true)}>Delete Book</Link>
         </Block>
+      )}
+
+      {showDeleteConfirm && (
+        <DeleteBookDialog
+          opened={showDeleteConfirm}
+          title={`Delete "${book.title}"?`}
+          content="This book will be permanently removed from your collection."
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+          destructive={true}
+        />
       )}
     </Page>
   );
