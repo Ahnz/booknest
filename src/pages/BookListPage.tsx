@@ -7,12 +7,15 @@ import { useBookSort } from "../hooks/useBookSort";
 import welcomeBookshelfImage from "../assets/welcomeBookshelf.png";
 import { Book } from "../types/Book";
 import BookDetailPage from "./BookDetailPage";
+import { Toolbar, Block, Button, Sheet } from "konsta/react";
+import FilterSheet from "@/components/FilterSheet";
 
 export default function BookListPage() {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
   const { sortedBooks, sortOption, sortDirection, handleSortChange } = useBookSort(books);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [sheetOpened, setSheetOpened] = useState(false);
   const [popoverTarget, setPopoverTarget] = useState<HTMLElement | null>(null);
 
   const handleSave = (updatedBook: Book) => {
@@ -28,6 +31,8 @@ export default function BookListPage() {
     setPopoverTarget(event.currentTarget);
     setPopoverOpen(true);
   };
+  const openSheet = () => setSheetOpened(true);
+  const closeSheet = () => setSheetOpened(false);
 
   const getSortDisplayText = () => {
     const directionIcon = sortDirection === "asc" ? "↑" : "↓";
@@ -48,9 +53,14 @@ export default function BookListPage() {
       <Navbar
         title="Bücher"
         right={
-          <Link navbar onClick={openSortPopover}>
-            {getSortDisplayText()}
-          </Link>
+          <>
+            <Link navbar onClick={openSortPopover}>
+              {getSortDisplayText()}
+            </Link>
+            <Link navbar onClick={openSheet}>
+              Sheet
+            </Link>
+          </>
         }
       />
 
@@ -78,6 +88,8 @@ export default function BookListPage() {
         onClose={() => setPopoverOpen(false)}
         onSortChange={handleSortChange}
       />
+
+      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)}></FilterSheet>
     </>
   );
 }
