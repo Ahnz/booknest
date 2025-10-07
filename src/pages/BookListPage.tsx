@@ -57,8 +57,12 @@ export default function BookListPage() {
             <Link navbar onClick={openSortPopover}>
               {getSortDisplayText()}
             </Link>
+          </>
+        }
+        left={
+          <>
             <Link navbar onClick={openSheet}>
-              Sheet
+              Filter
             </Link>
           </>
         }

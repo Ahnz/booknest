@@ -140,9 +140,9 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
         <List className="ios:mt-4">
           {/* Lesestatus */}
           <BlockTitle>Lesestatus</BlockTitle>
+          <br></br>
           <ListInput
             outline
-            label="Lesestatus"
             type="select"
             dropdown
             value={selectedStatus || ""}
@@ -172,12 +172,12 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
               onShowAllClick={() => setShowAllGenres(true)}
             />
           </Block>
-          <hr />
+
           {/* Erweiterte Filter Toggle */}
           <List>
             <ListItem
               title="Erweiterte Filter"
-              className="cursor-pointer"
+              className="cursor-pointer border-t border-gray-200 dark:border-gray-700 pt-2"
               onClick={() => setShowExtendedFilters(!showExtendedFilters)}
               after={
                 <svg
@@ -194,13 +194,13 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
 
           {/* Erweiterte Filter */}
           {showExtendedFilters && (
-            <Block className="pt-0">
-              <List className="ios:mt-2">
+            <div>
+              <List>
                 {/* Autoren */}
                 <BlockTitle>Autoren</BlockTitle>
+                <br></br>
                 <ListInput
                   outline
-                  label="Autor suchen"
                   type="text"
                   placeholder="Autor suchen..."
                   value={authorSearchQuery}
@@ -256,9 +256,9 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
 
                 {/* Seitenzahl */}
                 <BlockTitle>Seitenzahl</BlockTitle>
+                <br></br>
                 <ListInput
                   outline
-                  label="Seitenanzahl"
                   type="select"
                   value={pageCountFilter}
                   onChange={(e) => setPageCountFilter(e.target.value)}
@@ -269,7 +269,7 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
                   <option value="long">Lang (&gt;400)</option>
                 </ListInput>
               </List>
-            </Block>
+            </div>
           )}
         </List>
       </Block>
