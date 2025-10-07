@@ -2,13 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { App, Page, Navbar } from "konsta/react";
 import TabBar from "./components/TabBar";
 import { DummyPage } from "./pages/DummyPage";
-import {
-  MdBarChart,
-  MdSettings,
-  MdHomeFilled,
-  MdOutlineStar,
-  MdOutlineDocumentScanner,
-} from "react-icons/md";
+import { MdBarChart, MdSettings, MdHomeFilled, MdOutlineStar, MdOutlineDocumentScanner } from "react-icons/md";
 import BookListPage from "./pages/BookListPage";
 import { BooksProvider } from "./context/BooksContext";
 import ModalPage from "./pages/ModalPage";
@@ -71,29 +65,22 @@ const AppComponent: React.FC = () => {
           <ModalPage onClose={handleCloseModal} />
         ) : (
           <>
-            <Page>
-              <Navbar title={activeTab} transparent large />
-              <Suspense fallback={<div>Loading...</div>}>
-                {tabs
-                  .filter((tab) => tab.id !== "scanner")
-                  .map((tab) => (
-                    <div
-                      key={tab.id}
-                      style={{
-                        display: activeTab === tab.id ? "block" : "none",
-                      }}
-                      className="overflow-visible"
-                    >
-                      {tab.component}
-                    </div>
-                  ))}
-              </Suspense>
-            </Page>
-            <TabBar
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              {tabs
+                .filter((tab) => tab.id !== "scanner")
+                .map((tab) => (
+                  <div
+                    key={tab.id}
+                    style={{
+                      display: activeTab === tab.id ? "block" : "none",
+                    }}
+                    className="overflow-visible"
+                  >
+                    {tab.component}
+                  </div>
+                ))}
+            </Suspense>
+            <TabBar tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
           </>
         )}
       </BooksProvider>

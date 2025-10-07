@@ -9,6 +9,7 @@ import { Book } from "../types/Book";
 import BookDetailPage from "./BookDetailPage";
 import { Toolbar, Block, Button, Sheet } from "konsta/react";
 import FilterSheet from "@/components/FilterSheet";
+import { Page } from "konsta/react";
 
 export default function BookListPage() {
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
@@ -49,9 +50,11 @@ export default function BookListPage() {
   };
 
   return (
-    <>
+    <Page>
       <Navbar
-        title="Bücher"
+        title="Meine Bücher"
+        transparent
+        medium
         right={
           <>
             <Link navbar onClick={openSortPopover}>
@@ -67,14 +70,12 @@ export default function BookListPage() {
           </>
         }
       />
-
       <BookListComponent
         books={sortedBooks}
         onListItemAction={(book) => setSelectedBook(book)}
         emptyImage={welcomeBookshelfImage}
         emptyText="Start searching for books to add to your collection"
       />
-
       {selectedBook && (
         <BookDetailPage
           book={selectedBook}
@@ -83,7 +84,6 @@ export default function BookListPage() {
           onDelete={handleDelete}
         />
       )}
-
       <BookSortPopover
         isOpen={popoverOpen}
         target={popoverTarget}
@@ -92,8 +92,7 @@ export default function BookListPage() {
         onClose={() => setPopoverOpen(false)}
         onSortChange={handleSortChange}
       />
-
-      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)}></FilterSheet>
-    </>
+      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)} />
+    </Page>
   );
 }
