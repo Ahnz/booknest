@@ -3,7 +3,7 @@ import { Navbar, Link } from "konsta/react";
 import { BookListComponent } from "@/components/BookListComponent";
 import BookSortPopover from "@/components/BookSortPopover";
 import { useBooksContext } from "../context/BooksContext";
-import { useBookSort } from "../hooks/useBookSort";
+import { useBookSortAndFilter } from "../hooks/useBookSortAndFilter";
 import welcomeBookshelfImage from "../assets/welcomeBookshelf.png";
 import { Book } from "../types/Book";
 import BookDetailPage from "./BookDetailPage";
@@ -12,12 +12,24 @@ import FilterSheet from "@/components/FilterSheet";
 import { Page } from "konsta/react";
 
 export default function BookListPage() {
+  // Base data from context
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
-  const { sortedBooks, sortOption, sortDirection, handleSortChange } = useBookSort(books);
+  
+  // UI state
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [sheetOpened, setSheetOpened] = useState(false);
   const [popoverTarget, setPopoverTarget] = useState<HTMLElement | null>(null);
+
+  // Apply filters and sorting to get visible books
+  const {
+    visibleBooks,
+    handleFilterChange,
+    hasActiveFilters,
+    sortOption,
+    sortDirection,
+    handleSortChange,
+  } = useBookSortAndFilter(books);
 
   const handleSave = (updatedBook: Book) => {
     setBooks((prevBooks) => prevBooks.map((book) => (book.isbn13 === updatedBook.isbn13 ? updatedBook : book)));
@@ -65,13 +77,13 @@ export default function BookListPage() {
         left={
           <>
             <Link navbar onClick={openSheet}>
-              Filter
+              {hasActiveFilters ? "Filter ●" : "Filter"}
             </Link>
           </>
         }
       />
       <BookListComponent
-        books={sortedBooks}
+        books={visibleBooks}
         onListItemAction={(book) => setSelectedBook(book)}
         emptyImage={welcomeBookshelfImage}
         emptyText="Start searching for books to add to your collection"
@@ -92,7 +104,7 @@ export default function BookListPage() {
         onClose={() => setPopoverOpen(false)}
         onSortChange={handleSortChange}
       />
-      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)} />
+      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)} onFilterChange={handleFilterChange} />
     </Page>
   );
 }
