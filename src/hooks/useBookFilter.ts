@@ -123,10 +123,10 @@ export function useBookFilter(books: Book[]) {
       filters.status !== null ||
       (filters.genres !== null && filters.genres.length > 0) ||
       (filters.authors !== undefined && filters.authors.length > 0) ||
-      filters.publicationYearFrom !== undefined ||
-      filters.publicationYearTo !== undefined ||
-      filters.pageCountFilter !== undefined ||
-      filters.minRating !== undefined
+      (filters.publicationYearFrom !== undefined && filters.publicationYearFrom !== 1900) ||
+      (filters.publicationYearTo !== undefined && filters.publicationYearTo !== new Date().getFullYear()) ||
+      (filters.pageCountFilter !== undefined && filters.pageCountFilter !== "") ||
+      (filters.minRating !== undefined && filters.minRating > 0)
     );
   }, [filters]);
 

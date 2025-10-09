@@ -7,6 +7,8 @@ import FilterChips from "./FilterChips"; // Annahme: Deine bestehende FilterChip
 export interface FilterSheetProps {
   opened: boolean;
   onClose: () => void;
+  availableGenres?: string[];
+  availableAuthors?: string[];
   onFilterChange?: (
     status: ReadingStatus | null,
     genres: string[] | null,
@@ -22,50 +24,17 @@ export interface FilterSheetProps {
   ) => void;
 }
 
-const COMMON_GENRES = ["Fantasy", "Romance", "Sci-Fi", "Mystery", "Biography"];
-const ALL_GENRES = [
-  "Fantasy",
-  "Romance",
-  "Sci-Fi",
-  "Mystery",
-  "Biography",
-  "Thriller",
-  "Historical Fiction",
-  "Horror",
-  "Adventure",
-  "Fiction",
-  "Non-Fiction",
-  "Drama",
-  "Comedy",
-  "Poetry",
-];
+// Fallback values if no books are available
+const FALLBACK_GENRES = ["Fantasy", "Romance", "Sci-Fi", "Mystery", "Biography"];
+const FALLBACK_AUTHORS = ["J.K. Rowling", "J.R.R. Tolkien", "Stephen King"];
 
-const COMMON_AUTHORS = ["J.K. Rowling", "J.R.R. Tolkien", "Rebecca Yarros", "George R.R. Martin", "Agatha Christie"];
-const ALL_AUTHORS = [
-  "J.K. Rowling",
-  "J.R.R. Tolkien",
-  "Rebecca Yarros",
-  "George R.R. Martin",
-  "Agatha Christie",
-  "Stephen King",
-  "Jane Austen",
-  "Autor 1000",
-  "Autor 1",
-  "Autor 2",
-  "Autor 3",
-  "Autor 4",
-  "Autor 5",
-  "Autor 6",
-  "Autor 7",
-  "Autor 8",
-  "Autor 9",
-  "Autor 10",
-  "Autor 11",
-  "Autor 12",
-  // Simuliert Tausende
-];
-
-export default function FilterSheet({ opened, onClose, onFilterChange }: FilterSheetProps) {
+export default function FilterSheet({ 
+  opened, 
+  onClose, 
+  availableGenres = FALLBACK_GENRES,
+  availableAuthors = FALLBACK_AUTHORS,
+  onFilterChange 
+}: FilterSheetProps) {
   const [selectedStatus, setSelectedStatus] = React.useState<ReadingStatus | null>(null);
   const [selectedGenres, setSelectedGenres] = React.useState<string[]>([]);
   const [showExtendedFilters, setShowExtendedFilters] = React.useState(false);
@@ -77,16 +46,19 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
   const [showAllGenres, setShowAllGenres] = React.useState(false);
   const [authorSearchQuery, setAuthorSearchQuery] = React.useState<string>("");
 
+  // Compute common items (top 5) and all items
+  const commonGenres = React.useMemo(() => availableGenres.slice(0, 5), [availableGenres]);
+  const commonAuthors = React.useMemo(() => availableAuthors.slice(0, 5), [availableAuthors]);
+
   // Gefilterte Autoren basierend auf Suche
   const filteredAuthors = React.useMemo(() => {
-    const authorsToShow = ALL_AUTHORS; // Zeige immer alle, da Suche dynamisch filtert
     if (authorSearchQuery) {
-      return authorsToShow
+      return availableAuthors
         .filter((author) => author.toLowerCase().includes(authorSearchQuery.toLowerCase()))
         .slice(0, 20); // Begrenze auf 20 für Performance
     }
-    return authorsToShow.slice(0, 20); // Standard: Zeige erste 20
-  }, [authorSearchQuery]);
+    return availableAuthors.slice(0, 20); // Standard: Zeige erste 20
+  }, [authorSearchQuery, availableAuthors]);
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) => (prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]));
@@ -110,10 +82,12 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
   };
 
   const handleSave = () => {
+    const currentYear = new Date().getFullYear();
     const extendedFilters = {
       authors: selectedAuthors.length > 0 ? selectedAuthors : undefined,
-      publicationYearFrom: publicationYearFrom,
-      publicationYearTo: publicationYearTo,
+      // Only include year filters if they differ from defaults
+      publicationYearFrom: publicationYearFrom !== 1900 ? publicationYearFrom : undefined,
+      publicationYearTo: publicationYearTo !== currentYear ? publicationYearTo : undefined,
       pageCountFilter: pageCountFilter || undefined,
       minRating: minRating > 0 ? minRating : undefined,
     };
@@ -164,7 +138,7 @@ export default function FilterSheet({ opened, onClose, onFilterChange }: FilterS
           <BlockTitle>Genres</BlockTitle>
           <Block>
             <FilterChips
-              items={showAllGenres ? ALL_GENRES : COMMON_GENRES}
+              items={showAllGenres ? availableGenres : commonGenres}
               selectedItems={selectedGenres}
               onToggleItem={toggleGenre}
               quickSelectCount={5}

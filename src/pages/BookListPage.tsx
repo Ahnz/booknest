@@ -4,6 +4,7 @@ import { BookListComponent } from "@/components/BookListComponent";
 import BookSortPopover from "@/components/BookSortPopover";
 import { useBooksContext } from "../context/BooksContext";
 import { useBookSortAndFilter } from "../hooks/useBookSortAndFilter";
+import { useBookMetadata } from "../hooks/useBookMetadata";
 import welcomeBookshelfImage from "../assets/welcomeBookshelf.png";
 import { Book } from "../types/Book";
 import BookDetailPage from "./BookDetailPage";
@@ -14,6 +15,9 @@ import { Page } from "konsta/react";
 export default function BookListPage() {
   // Base data from context
   const { books, setBooks, isLoading, error: dbError } = useBooksContext();
+  
+  // Extract unique authors and genres from books
+  const { allGenres, allAuthors } = useBookMetadata(books);
   
   // UI state
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -104,7 +108,13 @@ export default function BookListPage() {
         onClose={() => setPopoverOpen(false)}
         onSortChange={handleSortChange}
       />
-      <FilterSheet opened={sheetOpened} onClose={() => setSheetOpened(false)} onFilterChange={handleFilterChange} />
+      <FilterSheet 
+        opened={sheetOpened} 
+        onClose={() => setSheetOpened(false)} 
+        onFilterChange={handleFilterChange}
+        availableGenres={allGenres}
+        availableAuthors={allAuthors}
+      />
     </Page>
   );
 }
